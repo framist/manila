@@ -336,96 +336,41 @@ const getBoatPositions = (type: string): Position[] => {
   return boatPositionsData[type as keyof typeof boatPositionsData] || [];
 };
 
-// 计算船抵达目的地概率（基于骰子 1-6 均等概率和剩余投掷次数）
+// 计算船抵达终点的概率（递推法，避免递归/枚举）
 const calculateArrivalProbability = (boat: Boat): number => {
-  const remainingDistance = 13 - boat.position;
-  
-  if (remainingDistance <= 0) return 1; // 已经到达
-  
-  // 根据剩余投掷次数计算概率
   const throwsLeft = remainingDiceThrows.value;
-  
-  if (throwsLeft === 0) return 0; // 没有投掷机会了
-  
-  // 精确计算单次骰子到达的概率
-  const singleThrowProb = Math.min(Math.max(0, (7 - remainingDistance) / 6), 1);
-  
-  if (throwsLeft === 1) {
-    return singleThrowProb; // 只有一次骰子机会
-  }
-  
-  // 计算两次骰子的概率
-  if (throwsLeft === 2) {
-    // 一次到达的概率 + 第一次未到达但第二次到达的概率
-    let secondProb = 0;
-    
-    // 第一次投掷每个点数的可能性
-    for (let firstThrow = 1; firstThrow <= 6; firstThrow++) {
-      if (firstThrow >= remainingDistance) {
-        // 第一次就到达，概率 1/6
-        secondProb += 1/6;
-      } else {
-        // 第一次未到达，计算第二次到达的概率
-        const remainAfterFirst = remainingDistance - firstThrow;
-        const secondThrowProb = Math.min(Math.max(0, (7 - remainAfterFirst) / 6), 1);
-        secondProb += (1/6) * secondThrowProb;
+  let pos = boat.position;
+  if (pos >= 13) return 1;
+  if (throwsLeft <= 0) return 0;
+
+  // dp[i][t]: 从i位置剩t次骰子到达终点的概率
+  const dp: number[][] = Array.from({ length: 14 }, () => Array(throwsLeft + 1).fill(0));
+  for (let i = 13; i >= 0; i--) dp[i][0] = i >= 13 ? 1 : 0;
+  for (let t = 1; t <= throwsLeft; t++) {
+    for (let i = 0; i <= 13; i++) {
+      let prob = 0;
+      for (let d = 1; d <= 6; d++) {
+        let next = i + d;
+        if (next > 13) next = 13;
+        prob += dp[next][t - 1] / 6;
       }
+      dp[i][t] = prob;
     }
-    
-    return secondProb;
   }
-  
-  // 计算三次骰子的概率（更精确的递归计算）
-  if (throwsLeft === 3) {
-    let thirdProb = 0;
-    
-    // 第一次投掷每个点数的可能性
-    for (let firstThrow = 1; firstThrow <= 6; firstThrow++) {
-      if (firstThrow >= remainingDistance) {
-        // 第一次就到达，概率 1/6
-        thirdProb += 1/6;
-      } else {
-        // 第一次未到达，计算余下两次的到达概率
-        const newBoat = { ...boat, position: boat.position + firstThrow };
-        const twoThrowProb = calculateArrivalProbabilityWithThrows(newBoat, 2);
-        thirdProb += (1/6) * twoThrowProb;
-      }
-    }
-    
-    return thirdProb;
-  }
-  
-  return 0; // 意外情况
+  return dp[pos][throwsLeft];
 };
 
-// 辅助函数：计算特定投掷次数的到达概率
-const calculateArrivalProbabilityWithThrows = (boat: Boat, throws: number): number => {
-  const remainingDistance = 13 - boat.position;
-  
-  if (remainingDistance <= 0) return 1; // 已经到达
-  if (throws === 0) return 0; // 没有投掷机会
-  
-  if (throws === 1) {
-    // 单次骰子到达的概率
-    return Math.min(Math.max(0, (7 - remainingDistance) / 6), 1);
-  }
-  
-  // 递归计算两次投掷的概率
-  let totalProb = 0;
-  
-  // 考虑第一次投掷的所有可能性
-  for (let firstThrow = 1; firstThrow <= 6; firstThrow++) {
-    if (firstThrow >= remainingDistance) {
-      // 第一次就到达
-      totalProb += 1/6;
-    } else {
-      // 第一次未到达，计算余下次数的到达概率
-      const newBoat = { ...boat, position: boat.position + firstThrow };
-      totalProb += (1/6) * calculateArrivalProbabilityWithThrows(newBoat, throws - 1);
-    }
-  }
-  
-  return totalProb;
+// 计算第三轮停在 13 号格概率（用于海盗收益/船员收益）
+const calculateStopAt13Probability = (boat: Boat): number => {
+  // 只在第三轮（剩余 1 次骰子）时有意义
+  if (remainingDiceThrows.value !== 1) return 0;
+  let pos = boat.position;
+  if (pos > 13) return 0;
+  if (pos === 13) return 1;
+  // 只掷出正好到 13 的点数才会停在 13
+  const need = 13 - pos;
+  if (need >= 1 && need <= 6) return 1 / 6;
+  return 0;
 };
 
 // 计算有多少个位置被占用
@@ -434,48 +379,11 @@ const countOccupiedPositions = (type: string): number => {
   return positions ? positions.filter(pos => pos.occupied).length : 0;
 };
 
-// 计算总位置数
-const countTotalPositions = (type: string): number => {
-  const positions = getBoatPositions(type);
-  return positions ? positions.length : 0;
-};
-
 // 判断是否有海盗存在（用于计算平底船收益）
 const hasPiratesActive = (): boolean => {
   return specialPositions.value.some(pos => 
     pos.type === 'pirate' && !pos.occupied
   );
-};
-
-// 计算货物平底船的收益（考虑已占用和将占用的位置）
-const calculateProfit = (boat: Boat, pos: Position): number => {
-  if (pos.occupied) return 0; // 已占用位置无收益
-  
-  // 获取此平底船已占用的位置数
-  const occupied = countOccupiedPositions(boat.type);
-  
-  // 获取分成基数 (已占用 + 当前位置计算)
-  const shareBase = occupied + 1;
-
-  // 第三轮投骰子后在 13 号位置会被海盗打劫的风险
-  if (remainingDiceThrows.value === 1 && hasPiratesActive()) {
-    // 计算停在 13 号格子的概率
-    let stop13Prob = 0;
-    
-    if (boat.position === 13) {
-      stop13Prob = 1; // 已在 13 格
-    } else if (boat.position >= 7 && boat.position <= 12) {
-      stop13Prob = 1/6; // 固定点数概率
-    }
-    
-    // 如果有被海盗打劫的风险，计算收益减少
-    if (stop13Prob > 0) {
-      const normalProfit = getPotentialProfit(boat.type, shareBase);
-      return normalProfit * (1 - stop13Prob); // 根据被打劫概率减少收益
-    }
-  }
-  
-  return getPotentialProfit(boat.type, shareBase);
 };
 
 // 获取潜在收益
@@ -489,11 +397,26 @@ const getPotentialProfit = (boatType: string, shareBase: number): number => {
   }
 };
 
+// 计算货物平底船的收益（考虑海盗劫掠）
+const calculateProfit = (boat: Boat, pos: Position): number => {
+  // 获取此平底船已占用的位置数
+  const occupied = countOccupiedPositions(boat.type);
+  const shareBase = occupied + 1;
+
+  // 第三轮有海盗时，停在 13 号的船员无收益
+  if (remainingDiceThrows.value === 1 && hasPiratesActive()) {
+    const stop13Prob = calculateStopAt13Probability(boat);
+    const normalProfit = getPotentialProfit(boat.type, shareBase);
+    // 停在 13 号概率部分收益归 0，其余正常
+    return normalProfit * (1 - stop13Prob);
+  }
+  return getPotentialProfit(boat.type, shareBase);
+};
+
 // 计算货物平底船的期望收益
 const calculateExpectedProfit = (boat: Boat, pos: Position): number => {
-  if (pos.occupied) return 0; // 已占用位置无收益
-  if (!boat.isSelected) return -pos.cost; // 未选中船只无收益
-  
+  if (!boat.isSelected) return -pos.cost;
+  // 若第三轮有海盗，停在 13 号的概率部分收益归 0
   const profit = calculateProfit(boat, pos);
   const probability = calculateArrivalProbability(boat);
   return profit * probability - pos.cost;
@@ -531,200 +454,73 @@ const calculatePortArrivalProbability = (port: PortYardPosition): number => {
 
 // 计算港口/造船厂期望收益（固定收益）
 const calculatePortExpectedProfit = (port: PortYardPosition): number => {
-  // if (port.occupied) return 0; // 已占用位置无收益
-  
   const probability = calculatePortArrivalProbability(port);
   return port.profit * probability - port.cost;
 };
 
 // 计算特殊位置概率
 const calculateSpecialProbability = (pos: SpecialPosition): number => {
-  // if (pos.occupied) return 0; // 已占用位置无收益
-  
-  // 海盗的概率是有船停在 13 格的概率
   if (pos.type === 'pirate') {
-    let pirateProb = 0;
-    const throwsLeft = remainingDiceThrows.value;
-    
-    if (throwsLeft === 1) {
-      // 对于第三次投掷前，计算停在 13 号格子的确切概率
-      visibleBoats.value.forEach(boat => {
-        // 当前已在 13 号格子
-        if (boat.position === 13) {
-          pirateProb += 1;
-        } 
-        // 计算恰好停在 13 号格子的概率
-        else if (boat.position >= 7 && boat.position <= 12) {
-          // 需要掷出特定点数才能到达13号格子
-          const targetDice = 13 - boat.position;
-          pirateProb += 1/6; // 每个目标点数的概率是1/6
-        }
-      });
-    } else if (throwsLeft === 2) {
-      // 对于第二次投掷前，计算第二次投掷后停在13号格子的概率
-      visibleBoats.value.forEach(boat => {
-        if (boat.position === 13) {
-          // 已在 13 号格子，但第二次投掷可能会将船移出
-          // 停留在 13 号的概率为 0（游戏规则要求必须移动骰子点数）
-          pirateProb += 0;
-        } else {
-          // 计算第一次投掷后可能到达的位置，然后计算从那些位置第二次投掷后恰好到达 13 号格子的概率
-          let stopAt13Prob = 0;
-          for (let dice1 = 1; dice1 <= 6; dice1++) {
-            const intermediatePosition = boat.position + dice1;
-            if (intermediatePosition === 13) {
-              // 第一次投掷后就到达13号格子，在第二次投掷后必定移动
-              // 根据规则，船必须移动，不能停留
-              stopAt13Prob += 0;
-            } else if (intermediatePosition < 13) {
-              // 第一次投掷后未到达13号格子，计算第二次恰好到达的概率
-              const targetDice = 13 - intermediatePosition;
-              if (targetDice >= 1 && targetDice <= 6) {
-                stopAt13Prob += (1/6) * (1/6); // 两次特定点数的概率
-              }
-            }
-            // 如果第一次投掷后超过13，则不可能在第二次结束时在13号格子
-          }
-          pirateProb += stopAt13Prob;
-        }
-      });
-    } else if (throwsLeft === 3) {
-      // 对于第一次投掷前，使用精确计算第三次投掷结束时在13号格子的概率
-      visibleBoats.value.forEach(boat => {
-        // 这里需要考虑三次骰子投掷的所有可能组合
-        let stopAt13Prob = 0;
-        
-        // 枚举第一次投掷的所有可能性
-        for (let dice1 = 1; dice1 <= 6; dice1++) {
-          const pos1 = boat.position + dice1;
-          
-          // 枚举第二次投掷的所有可能性
-          for (let dice2 = 1; dice2 <= 6; dice2++) {
-            const pos2 = pos1 + dice2;
-            
-            // 第三次投掷需要恰好到达13号格子
-            const targetDice = 13 - pos2;
-            if (targetDice >= 1 && targetDice <= 6) {
-              stopAt13Prob += (1/6) * (1/6) * (1/6); // 三次特定点数的概率
-            }
-          }
-        }
-        
-        pirateProb += stopAt13Prob;
-      });
-    }
-    
-    return Math.min(pirateProb, 1); // 概率最大为 1
+    // 只在第三轮有概率
+    if (remainingDiceThrows.value !== 1) return 0;
+    // 只要有船停在 13 号就触发
+    let prob = 0;
+    visibleBoats.value.forEach(boat => {
+      prob += calculateStopAt13Probability(boat);
+    });
+    return Math.min(prob, 1);
   }
-  
-  // 领航员的有效性，粗略估计
-  if (pos.type === 'pilot') {
-    // 领航员只在第三轮投掷前有作用
-    return currentRound.value === 3 ? 0.8 : 0.2;
-  }
-  
-  // 保险的收益取决于有船进入造船厂的概率
+  if (pos.type === 'pilot') return 0;
   if (pos.type === 'insurance') {
     let allArriveProbability = 1;
     visibleBoats.value.forEach(boat => {
       allArriveProbability *= calculateArrivalProbability(boat);
     });
-    return 1 - allArriveProbability; // 至少有一艘船未到达港口的概率
+    return 1 - allArriveProbability;
   }
-  
   return 0;
 };
 
 // 计算特殊位置收益
 const calculateSpecialProfit = (pos: SpecialPosition): number => {
-  if (pos.occupied) return 0; // 已占用位置无收益
-  
-  // 海盗收益估算（考虑共享收益）
+  if (pos.occupied) return 0;
   if (pos.type === 'pirate') {
-    // 统计未被占用的海盗位置数量
-    const piratePositions = specialPositions.value.filter(p => p.type === 'pirate');
-    const occupiedPirates = piratePositions.filter(p => p.occupied).length;
-    const totalPirates = piratePositions.length;
-    
-    // 计算共享基数（当前 + 已占用）
-    const shareBase = occupiedPirates + 1;
-    
-    // 估算可能掠夺的船只的平均收益（第三轮投骰子后）
-    let potentialBooty = 0;
-    
-    if (remainingDiceThrows.value === 1) {
-      // 第三轮投骰子后，分析可能停在 13 号格子的船只
-      visibleBoats.value.forEach(boat => {
-        let stopAt13Prob = 0;
-        
-        if (boat.position === 13) {
-          stopAt13Prob = 1;
-        } else if (boat.position >= 7 && boat.position <= 12) {
-          stopAt13Prob = 1/6;
-        }
-        
-        // 若船停在13号格子，海盗可获得船上的全部收益
-        if (stopAt13Prob > 0) {
-          switch (boat.type) {
-            case 'ginseng': potentialBooty += 18 * stopAt13Prob; break;
-            case 'silk': potentialBooty += 30 * stopAt13Prob; break;
-            case 'nutmeg': potentialBooty += 24 * stopAt13Prob; break;
-            case 'jade': potentialBooty += 36 * stopAt13Prob; break;
-          }
-        }
-      });
-    } else {
-      // 其他轮次使用平均估算
-      potentialBooty = visibleBoats.value.reduce((total, boat) => {
-        switch (boat.type) {
-          case 'ginseng': return total + 18;
-          case 'silk': return total + 30;
-          case 'nutmeg': return total + 24;
-          case 'jade': return total + 36;
-        }
-        return total;
-      }, 0) / Math.max(visibleBoats.value.length, 1) * 0.3; // 调整掠夺概率因子
-    }
-    
-    // 海盗船长和船员的收益比例
-    if (pos.position === 'captain') {
-      const captainOccupied = specialPositions.value.find(p => p.type === 'pirate' && p.position === 'captain')?.occupied;
-      if (captainOccupied) return 0;
-      
-      const crewActive = specialPositions.value.some(p => p.type === 'pirate' && p.position === 'crew' && !p.occupied);
-      return crewActive ? (potentialBooty * 0.7) : potentialBooty; // 船长拿更多
-    } else {
-      const captainActive = specialPositions.value.some(p => p.type === 'pirate' && p.position === 'captain' && !p.occupied);
-      return captainActive ? (potentialBooty * 0.3) : potentialBooty; // 船员拿更少
-    }
+    // 只在第三轮有收益
+    if (remainingDiceThrows.value !== 1) return 0;
+    // 统计所有停在 13 号的船的收益
+    let totalBooty = 0;
+    visibleBoats.value.forEach(boat => {
+      const stop13Prob = calculateStopAt13Probability(boat);
+      let booty = 0;
+      switch (boat.type) {
+        case 'ginseng': booty = 18; break;
+        case 'silk': booty = 30; break;
+        case 'nutmeg': booty = 24; break;
+        case 'jade': booty = 36; break;
+      }
+      totalBooty += booty * stop13Prob;
+    });
+    // 海盗船长和船员平分
+    const pirates = specialPositions.value.filter(p => p.type === 'pirate' && !p.occupied);
+    const pirateCount = pirates.length;
+    if (pirateCount === 0) return 0;
+    return totalBooty / pirateCount;
   }
-  
-  // 保险员固定收益
   if (pos.type === 'insurance') {
-    // 计算可能需要赔付的金额
-    const potentialPayout = visibleBoats.value.reduce((total, boat) => {
-      // 计算船只未到达港口的概率及相应赔付
+    let potentialPayout = visibleBoats.value.reduce((total, boat) => {
       const failProb = 1 - calculateArrivalProbability(boat);
-      return total + 10 * failProb; // 假设赔付 10 比索
+      return total + 10 * failProb;
     }, 0);
-    
-    // 保险收益 = 初始获得 - 预期赔付
     return pos.profit - potentialPayout;
   }
-  
-  // 领航员无直接收益
   if (pos.type === 'pilot') {
     return 0;
   }
-  
-  // 其他位置使用固定收益
   return pos.profit || 0;
 };
 
 // 计算特殊位置期望收益
 const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
-  if (pos.occupied) return 0; // 已占用位置无收益
-  
   const probability = calculateSpecialProbability(pos);
   const profit = calculateSpecialProfit(pos);
   return profit * probability - pos.cost;
@@ -751,8 +547,7 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
 }
 
 .input-panel {
-  flex: 0 0 320px;
-  min-width: 280px;
+  flex: 0 0 280px;
 }
 
 .output-panel {
