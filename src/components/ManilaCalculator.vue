@@ -1,6 +1,5 @@
 <template>
   <div class="manila-calculator">
-    <!-- 使用说明放置在顶部 -->
     <div class="instructions-wrapper">
       <div class="instructions">
         <h3>使用说明</h3>
@@ -9,10 +8,11 @@
           <ol>
             <li><strong>当前轮次</strong>：选择当前是第几次骰子投掷前，会影响船只到达目的地的概率计算。</li>
             <li><strong>船只设置</strong>：调整滑块设置各船当前位置 (0-13)。</li>
-            <li><strong>已占用位置</strong>：勾选已被占用的位置，系统会据此计算剩余位置的预期收益。</li>
+            <li><strong>已占位置</strong>：勾选已被占用的位置，系统会据此计算剩余位置的预期收益。</li>
             <li><strong>收益分析</strong>：表格中绿色背景表示正收益的位置，灰色表示已占用位置。</li>
+            <li><strong>假重要设</strong>：基于后期不会有改变价值的位置占据状况被改变</li>
+            <li><strong>额外村规</strong>：海盗对无法影响第二轮移动结束时位于 13 号格子的平底船</li>
           </ol>
-          <p>平底船和海盗船收益由所有参与者（当前及已占用）平分，其他位置收益固定。</p>
         </div>
         <a href="https://github.com/framist/manila" target="_blank" class="github-link" title="查看GitHub仓库">
           <span class="github-icon">
@@ -111,23 +111,36 @@
         <h2>期望收益分析</h2>
         
         <div class="visualization-section">
+          <div class="round-display">
+            当前设置：{{ getCurrentRoundLabel() }}，剩余骰子次数：{{ remainingDiceThrows }}
+          </div>
+
           <h3>船只位置可视化</h3>
           <div class="track-visualization">
             <div class="track" v-for="(boat, index) in visibleBoats" :key="index">
-              <div class="track-label" :class="boat.type">{{ boat.name }}</div>
+              <div class="track-header">
+                <span class="track-label" :class="boat.type">{{ boat.name }}
+                  <span v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`occupied-${posIndex}`" 
+                        :class="{ 'occupied': pos.occupied }">●</span>
+                </span> 
+                <span class="track-info">P(>13)={{ (calculateOver13Probability(boat) * 100).toFixed(1) }}%</span>  
+                <span class="track-info">P(=13)={{ (calculateStopAt13Probability(boat) * 100).toFixed(1) }}%</span>
+                <span class="track-info">P(>12)={{ (calculateOver12Probability(boat) * 100).toFixed(1) }}%</span>    
+              </div>
+
               <div class="track-slots">
                 <div class="track-slot" v-for="i in 14" :key="i-1" 
                      :class="{ 'boat-here': i-1 === boat.position }">
                   {{ i-1 }}
                 </div>
               </div>
+              
+              
             </div>
           </div>
-          <div class="round-display">
-            当前设置：{{ getCurrentRoundLabel() }}，剩余骰子次数：{{ remainingDiceThrows }}
-          </div>
+
         </div>
-        
+
         <div class="profit-section">
           <h3>收益期望分析</h3>
           
@@ -157,7 +170,7 @@
                       <td>{{ posIndex + 1 }}</td>
                       <td>{{ pos.cost }}比索</td>
                       <td>{{ calculateProfit(boat, pos).toFixed(1) }}比索</td>
-                      <td>{{ (calculateArrivalProbability(boat) * 100).toFixed(0) }}%</td>
+                      <td>{{ (calculateOver13Probability(boat) * 100).toFixed(0) }}%</td>
                       <td>{{ calculateExpectedProfit(boat, pos).toFixed(1) }}比索</td>
                       <td>{{ pos.occupied ? '已占用' : '可选择' }}</td>
                     </tr>
@@ -255,10 +268,10 @@ const getCurrentRoundLabel = () => {
 
 // 定义船只数据
 const boats = ref([
-  { name: '人参', type: 'ginseng', position: 0, isSelected: true },
-  { name: '丝绸', type: 'silk', position: 0, isSelected: true },
-  { name: '肉豆蔻', type: 'nutmeg', position: 0, isSelected: true },
-  { name: '玉石', type: 'jade', position: 0, isSelected: false }
+  { name: '人参', type: 'ginseng', position: 0, isSelected: true , profit: 18},
+  { name: '丝绸', type: 'silk', position: 0, isSelected: true , profit: 30},
+  { name: '肉豆蔻', type: 'nutmeg', position: 0, isSelected: true , profit: 24},
+  { name: '玉石', type: 'jade', position: 0, isSelected: false , profit: 36}
 ]);
 
 // 定义各船位置及成本，加入是否已占用的状态
@@ -305,12 +318,13 @@ const specialPositions = ref([
   { name: '保险员', type: 'insurance', position: 'insurance', cost: 0, profit: 10, occupied: false }
 ]);
 
-// 添加类型定义
+
 interface Boat {
   name: string;
   type: string;
   position: number;
   isSelected: boolean;
+  profit: number;
 }
 
 interface Position {
@@ -346,41 +360,53 @@ const getBoatPositions = (type: string): Position[] => {
   return boatPositionsData[type as keyof typeof boatPositionsData] || [];
 };
 
-// 计算船抵达终点的概率（递推法，避免递归/枚举）
-const calculateArrivalProbability = (boat: Boat): number => {
-  const throwsLeft = remainingDiceThrows.value;
-  let pos = boat.position;
-  if (pos >= 13) return 1;
-  if (throwsLeft <= 0) return 0;
-
-  // dp[i][t]: 从i位置剩t次骰子到达终点的概率
-  const dp: number[][] = Array.from({ length: 14 }, () => Array(throwsLeft + 1).fill(0));
-  for (let i = 13; i >= 0; i--) dp[i][0] = i >= 13 ? 1 : 0;
-  for (let t = 1; t <= throwsLeft; t++) {
-    for (let i = 0; i <= 13; i++) {
-      let prob = 0;
+// 船只超过位置 n 概率动态规划表
+// dp[i][t]: 从 i 位置剩 t 次骰子 > n 的概率
+const getDpbyN = (n: number) => {
+  const dp: number[][] = Array.from(
+    { length: n + 1 }, 
+    () => Array.from({ length: 3 }, () => 0)
+  );
+  
+  // 填充动态规划表
+  for (let t = 0; t < 3; t++) {
+    for (let i = 0; i <= n; i++) {
       for (let d = 1; d <= 6; d++) {
         let next = i + d;
-        if (next > 13) next = 13;
-        prob += dp[next][t - 1] / 6;
+        if (next > n) {
+          // > n，到达终点
+          dp[i][t] += 1/6;
+        } else {
+          // 小于 n，继续移动
+          if (t > 0) {
+            dp[i][t] += dp[next][t-1] / 6; // 后续到达终点
+          }
+        }
       }
-      dp[i][t] = prob;
     }
   }
-  return dp[pos][throwsLeft];
+  return dp
+}
+
+// 原有的到达终点概率函数
+const calculateOver13Probability = (boat: Boat): number => {
+  const throwsLeft = remainingDiceThrows.value;
+  let pos = boat.position;
+  return getDpbyN(13)[pos][throwsLeft - 1]
 };
 
-// 计算第三轮停在 13 号格概率（用于海盗收益/船员收益）
-const calculateStopAt13Probability = (boat: Boat): number => {
-  // 只在第三轮（剩余 1 次骰子）时有意义
-  if (remainingDiceThrows.value !== 1) return 0;
+const calculateOver12Probability = (boat: Boat): number => {
+  const throwsLeft = remainingDiceThrows.value;
   let pos = boat.position;
-  if (pos > 13) return 0;
-  if (pos === 13) return 1;
-  // 只掷出正好到 13 的点数才会停在 13
-  const need = 13 - pos;
-  if (need >= 1 && need <= 6) return 1 / 6;
-  return 0;
+  return getDpbyN(12)[pos][throwsLeft - 1]
+};
+
+// 计算停在 13 号格概率（用于海盗收益/船员收益）
+const calculateStopAt13Probability = (boat: Boat): number => {
+  const throwsLeft = remainingDiceThrows.value;
+  let pos = boat.position;
+  return getDpbyN(12)[pos][throwsLeft - 1]
+  - getDpbyN(13)[pos][throwsLeft - 1] // 计算停在 13 的概率 
 };
 
 // 计算有多少个位置被占用
@@ -392,35 +418,29 @@ const countOccupiedPositions = (type: string): number => {
 // 判断是否有海盗存在（用于计算平底船收益）
 const hasPiratesActive = (): boolean => {
   return specialPositions.value.some(pos => 
-    pos.type === 'pirate' && !pos.occupied
+    pos.type === 'pirate' && pos.occupied
   );
 };
 
 // 获取潜在收益
-const getPotentialProfit = (boatType: string, shareBase: number): number => {
-  switch (boatType) {
-    case 'ginseng': return 18 / shareBase;
-    case 'silk': return 30 / shareBase;
-    case 'nutmeg': return 24 / shareBase;
-    case 'jade': return 36 / shareBase;
-    default: return 0;
-  }
+const getPotentialProfit = (boat: Boat, shareBase: number): number => {
+  return boat.profit / shareBase;
 };
 
 // 计算货物平底船的收益（考虑海盗劫掠）
 const calculateProfit = (boat: Boat, pos: Position): number => {
   // 获取此平底船已占用的位置数
   const occupied = countOccupiedPositions(boat.type);
-  const shareBase = occupied + 1;
+  const shareBase = occupied + 1;  // +1 是因为将计算将占用的位置收益
 
   // 第三轮有海盗时，停在 13 号的船员无收益
   if (remainingDiceThrows.value === 1 && hasPiratesActive()) {
     const stop13Prob = calculateStopAt13Probability(boat);
-    const normalProfit = getPotentialProfit(boat.type, shareBase);
+    const normalProfit = getPotentialProfit(boat, shareBase);
     // 停在 13 号概率部分收益归 0，其余正常
     return normalProfit * (1 - stop13Prob);
   }
-  return getPotentialProfit(boat.type, shareBase);
+  return getPotentialProfit(boat, shareBase);
 };
 
 // 计算货物平底船的期望收益
@@ -428,7 +448,7 @@ const calculateExpectedProfit = (boat: Boat, pos: Position): number => {
   if (!boat.isSelected) return -pos.cost;
   // 若第三轮有海盗，停在 13 号的概率部分收益归 0
   const profit = calculateProfit(boat, pos);
-  const probability = calculateArrivalProbability(boat);
+  const probability = calculateOver13Probability(boat);
   return profit * probability - pos.cost;
 };
 
@@ -452,10 +472,10 @@ const calculatePortArrivalProbability = (port: PortYardPosition): number => {
   visibleBoats.value.forEach(boat => {
     if (port.type === 'port') {
       // 港口：船到达终点的概率
-      totalProb += calculateArrivalProbability(boat) / portCount;
+      totalProb += calculateOver13Probability(boat) / portCount;
     } else {
       // 造船厂：船未到达终点的概率
-      totalProb += (1 - calculateArrivalProbability(boat)) / yardCount;
+      totalProb += (1 - calculateOver13Probability(boat)) / yardCount;
     }
   });
   
@@ -484,7 +504,7 @@ const calculateSpecialProbability = (pos: SpecialPosition): number => {
   if (pos.type === 'insurance') {
     let allArriveProbability = 1;
     visibleBoats.value.forEach(boat => {
-      allArriveProbability *= calculateArrivalProbability(boat);
+      allArriveProbability *= calculateOver13Probability(boat);
     });
     return 1 - allArriveProbability;
   }
@@ -518,7 +538,7 @@ const calculateSpecialProfit = (pos: SpecialPosition): number => {
   }
   if (pos.type === 'insurance') {
     let potentialPayout = visibleBoats.value.reduce((total, boat) => {
-      const failProb = 1 - calculateArrivalProbability(boat);
+      const failProb = 1 - calculateOver13Probability(boat);
       return total + 10 * failProb;
     }, 0);
     return pos.profit - potentialPayout;
@@ -655,12 +675,12 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
 }
 
 .round-display {
-  margin-top: 10px;
   padding: 8px;
   background: #f0f8ff;
   border-radius: 4px;
   font-weight: 500;
   text-align: center;
+  margin-bottom: 15px;
 }
 
 h2 {
@@ -803,27 +823,41 @@ h4 {
 
 .track {
   display: flex;
-  align-items: center;
-  margin-bottom: 15px;
+  flex-direction: column; /* 改为列式布局 */
+  margin-bottom: 12px;
 }
 
-.track:last-child {
-  margin-bottom: 0;
+.track-header {
+  display: flex;
+  margin-bottom: 4px;
+  grid-template-columns: auto 1fr auto; /* 头尾固定大小，中间伸展 */
 }
 
 .track-label {
-  width: 60px;
+  width: 100px;
   font-weight: bold;
 }
+
 
 .track-label.ginseng { color: #E74C3C; }
 .track-label.silk { color: #3498DB; }
 .track-label.nutmeg { color: #F39C12; }
 .track-label.jade { color: #2ECC71; }
 
+.track-info {
+  width: 100px;
+  font-size: small;
+  color: #2c3e50;
+}
+
+.occupied {
+  color: #ccc;
+}
+
+/* 调整 track-slots 使其占满整行 */
 .track-slots {
   display: flex;
-  flex-grow: 1;
+  width: 100%;
 }
 
 .track-slot {
@@ -881,8 +915,7 @@ h4 {
 }
 
 .occupied {
-  background-color: #f0f0f0;
-  color: #999;
+  color: #ccc;
 }
 
 /* 响应式调整 */
@@ -902,4 +935,42 @@ h4 {
     padding: 0 20px;
   }
 }
+
+
+
+.probability-table-container {
+  margin: 10px 0 20px 0;
+  overflow-x: auto;
+}
+
+.probability-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.probability-table th, .probability-table td {
+  padding: 8px 12px;
+  border: 1px solid #eee;
+  text-align: center;
+}
+
+.probability-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+.probability-table td.boat-name {
+  font-weight: bold;
+}
+
+.probability-table td.boat-name.ginseng { color: #E74C3C; }
+.probability-table td.boat-name.silk { color: #3498DB; }
+.probability-table td.boat-name.nutmeg { color: #F39C12; }
+.probability-table td.boat-name.jade { color: #2ECC71; }
+
+
+
 </style>
