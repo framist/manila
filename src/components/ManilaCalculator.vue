@@ -17,7 +17,9 @@
         <a href="https://github.com/framist/manila" target="_blank" class="github-link" title="查看GitHub仓库">
           <span class="github-icon">
             <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+              <path fill-rule="evenodd"
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+              </path>
             </svg>
           </span>
         </a>
@@ -28,7 +30,7 @@
       <!-- 输入区域 - 左侧 -->
       <div class="input-panel">
         <h2>游戏状态设置</h2>
-        
+
         <div class="section boat-settings">
           <h3>船只位置设置</h3>
           <div class="dice-round">
@@ -40,7 +42,7 @@
               </label>
             </div>
           </div>
-          
+
           <div class="boats-setup">
             <div v-for="(boat, index) in boats" :key="index" class="boat-item">
               <div class="boat-header">
@@ -52,34 +54,35 @@
                   </label>
                 </div>
               </div>
-              
+
               <div class="position-control">
                 <span class="position-label">位置：{{ boat.position }}</span>
                 <input type="range" v-model.number="boat.position" :min="0" :max="13" />
                 <div class="position-track">
-                  <div class="track-mark" v-for="i in 14" :key="i-1">{{ i-1 }}</div>
+                  <div class="track-mark" v-for="i in 14" :key="i - 1">{{ i - 1 }}</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div class="section special-settings">
           <h3>已占用位置设置</h3>
-          
+
           <div class="boat-occupancy">
             <h4>平底船已占用位置</h4>
             <div v-for="(boat, boatIndex) in visibleBoats" :key="`boat-${boatIndex}`" class="occupancy-group">
               <h5 class="occupancy-header" :class="boat.type">{{ boat.name }}</h5>
               <div class="occupancy-slots">
-                <label v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`pos-${posIndex}`" class="slot-label">
+                <label v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`pos-${posIndex}`"
+                  class="slot-label">
                   <input type="checkbox" v-model="pos.occupied" />
                   位置{{ posIndex + 1 }} ({{ pos.cost }}比索)
                 </label>
               </div>
             </div>
           </div>
-          
+
           <div class="port-yard-occupancy">
             <h4>港口与造船厂已占用位置</h4>
             <div class="occupancy-group">
@@ -91,7 +94,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="special-occupancy">
             <h4>特殊位置已占用</h4>
             <div class="occupancy-group">
@@ -105,11 +108,11 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 输出区域 - 右侧 -->
       <div class="output-panel">
         <h2>期望收益分析</h2>
-        
+
         <div class="visualization-section">
           <div class="round-display">
             当前设置：{{ getCurrentRoundLabel() }}，剩余骰子次数：{{ remainingDiceThrows }}
@@ -120,22 +123,21 @@
             <div class="track" v-for="(boat, index) in visibleBoats" :key="index">
               <div class="track-header">
                 <span class="track-label" :class="boat.type">{{ boat.name }}
-                  <span v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`occupied-${posIndex}`" 
-                        :class="{ 'occupied': pos.occupied }">●</span>
-                </span> 
-                <span class="track-info">P(>13)={{ (calculateOver13Probability(boat) * 100).toFixed(1) }}%</span>  
+                  <span v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`occupied-${posIndex}`"
+                    :class="{ 'occupied': pos.occupied }">●</span>
+                </span>
+                <span class="track-info">P(>13)={{ (calculateOver13Probability(boat) * 100).toFixed(1) }}%</span>
                 <span class="track-info">P(=13)={{ (calculateStopAt13Probability(boat) * 100).toFixed(1) }}%</span>
-                <span class="track-info">P(>12)={{ (calculateOver12Probability(boat) * 100).toFixed(1) }}%</span>    
+                <span class="track-info">P(>12)={{ (calculateOver12Probability(boat) * 100).toFixed(1) }}%</span>
               </div>
 
               <div class="track-slots">
-                <div class="track-slot" v-for="i in 14" :key="i-1" 
-                     :class="{ 'boat-here': i-1 === boat.position }">
-                  {{ i-1 }}
+                <div class="track-slot" v-for="i in 14" :key="i - 1" :class="{ 'boat-here': i - 1 === boat.position }">
+                  {{ i - 1 }}
                 </div>
               </div>
-              
-              
+
+
             </div>
           </div>
 
@@ -143,7 +145,7 @@
 
         <div class="profit-section">
           <h3>收益期望分析</h3>
-          
+
           <div class="profit-tables">
             <div class="profit-table" v-if="visibleBoats.length > 0">
               <h4>平底船位置收益</h4>
@@ -161,11 +163,10 @@
                 </thead>
                 <tbody>
                   <template v-for="(boat, boatIndex) in visibleBoats" :key="boatIndex">
-                    <tr v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`${boatIndex}-${posIndex}`"
-                        :class="{ 
-                          'high-profit': !pos.occupied && calculateExpectedProfit(boat, pos) > 0,
-                          'occupied': pos.occupied 
-                        }">
+                    <tr v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`${boatIndex}-${posIndex}`" :class="{
+                      'high-profit': !pos.occupied && calculateExpectedProfit(boat, pos) > 0,
+                      'occupied': pos.occupied
+                    }">
                       <td>{{ boat.name }}</td>
                       <td>{{ posIndex + 1 }}</td>
                       <td>{{ pos.cost }}比索</td>
@@ -178,7 +179,7 @@
                 </tbody>
               </table>
             </div>
-            
+
             <div class="profit-table">
               <h4>港口和造船厂收益</h4>
               <table>
@@ -193,11 +194,10 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(port, portIndex) in portYardPositions" :key="portIndex"
-                      :class="{ 
-                        'high-profit': !port.occupied && calculatePortExpectedProfit(port) > 0,
-                        'occupied': port.occupied 
-                      }">
+                  <tr v-for="(port, portIndex) in portYardPositions" :key="portIndex" :class="{
+                    'high-profit': !port.occupied && calculatePortExpectedProfit(port) > 0,
+                    'occupied': port.occupied
+                  }">
                     <td>{{ port.name }}</td>
                     <td>{{ port.cost }}比索</td>
                     <td>{{ port.profit }}比索</td>
@@ -208,7 +208,7 @@
                 </tbody>
               </table>
             </div>
-            
+
             <div class="profit-table">
               <h4>特殊位置收益</h4>
               <table>
@@ -223,11 +223,10 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(pos, index) in specialPositions" :key="index"
-                      :class="{ 
-                        'high-profit': !pos.occupied && calculateSpecialExpectedProfit(pos) > 0,
-                        'occupied': pos.occupied 
-                      }">
+                  <tr v-for="(pos, index) in specialPositions" :key="index" :class="{
+                    'high-profit': !pos.occupied && calculateSpecialExpectedProfit(pos) > 0,
+                    'occupied': pos.occupied
+                  }">
                     <td>{{ pos.name }}</td>
                     <td>{{ pos.cost }}比索</td>
                     <td>{{ calculateSpecialProfit(pos).toFixed(1) }}比索</td>
@@ -268,10 +267,10 @@ const getCurrentRoundLabel = () => {
 
 // 定义船只数据
 const boats = ref([
-  { name: '人参', type: 'ginseng', position: 0, isSelected: true , profit: 18},
-  { name: '丝绸', type: 'silk', position: 0, isSelected: true , profit: 30},
-  { name: '肉豆蔻', type: 'nutmeg', position: 0, isSelected: true , profit: 24},
-  { name: '玉石', type: 'jade', position: 0, isSelected: false , profit: 36}
+  { name: '人参', type: 'ginseng', position: 0, isSelected: true, profit: 18 },
+  { name: '丝绸', type: 'silk', position: 0, isSelected: true, profit: 30 },
+  { name: '肉豆蔻', type: 'nutmeg', position: 0, isSelected: true, profit: 24 },
+  { name: '玉石', type: 'jade', position: 0, isSelected: false, profit: 36 }
 ]);
 
 // 定义各船位置及成本，加入是否已占用的状态
@@ -364,10 +363,10 @@ const getBoatPositions = (type: string): Position[] => {
 // dp[i][t]: 从 i 位置剩 t 次骰子 > n 的概率
 const getDpbyN = (n: number) => {
   const dp: number[][] = Array.from(
-    { length: n + 1 }, 
+    { length: n + 1 },
     () => Array.from({ length: 3 }, () => 0)
   );
-  
+
   // 填充动态规划表
   for (let t = 0; t < 3; t++) {
     for (let i = 0; i <= n; i++) {
@@ -375,11 +374,11 @@ const getDpbyN = (n: number) => {
         let next = i + d;
         if (next > n) {
           // > n，到达终点
-          dp[i][t] += 1/6;
+          dp[i][t] += 1 / 6;
         } else {
           // 小于 n，继续移动
           if (t > 0) {
-            dp[i][t] += dp[next][t-1] / 6; // 后续到达终点
+            dp[i][t] += dp[next][t - 1] / 6; // 后续到达终点
           }
         }
       }
@@ -406,7 +405,7 @@ const calculateStopAt13Probability = (boat: Boat): number => {
   const throwsLeft = remainingDiceThrows.value;
   let pos = boat.position;
   return getDpbyN(12)[pos][throwsLeft - 1]
-  - getDpbyN(13)[pos][throwsLeft - 1] // 计算停在 13 的概率 
+    - getDpbyN(13)[pos][throwsLeft - 1] // 计算停在 13 的概率 
 };
 
 // 计算有多少个位置被占用
@@ -417,7 +416,7 @@ const countOccupiedPositions = (type: string): number => {
 
 // 判断是否有海盗存在（用于计算平底船收益）
 const hasPiratesActive = (): boolean => {
-  return specialPositions.value.some(pos => 
+  return specialPositions.value.some(pos =>
     pos.type === 'pirate' && pos.occupied
   );
 };
@@ -455,10 +454,10 @@ const calculateExpectedProfit = (boat: Boat, pos: Position): number => {
 // 计算港口/造船厂到达概率
 const calculatePortArrivalProbability = (port: PortYardPosition): number => {
   if (visibleBoats.value.length === 0) return 0;
-  
+
   // 港口的概率是到达终点的概率，造船厂的概率是无法到达终点的概率
   let totalProb = 0;
-  
+
   // 统计港口总数和造船厂总数
   const portCount = Math.max(
     portYardPositions.value.filter(p => p.type === 'port' && !p.occupied).length,
@@ -468,7 +467,7 @@ const calculatePortArrivalProbability = (port: PortYardPosition): number => {
     portYardPositions.value.filter(p => p.type === 'yard' && !p.occupied).length,
     1
   );
-  
+
   visibleBoats.value.forEach(boat => {
     if (port.type === 'port') {
       // 港口：船到达终点的概率
@@ -478,7 +477,7 @@ const calculatePortArrivalProbability = (port: PortYardPosition): number => {
       totalProb += (1 - calculateOver13Probability(boat)) / yardCount;
     }
   });
-  
+
   return Math.min(totalProb, 1); // 概率最大为 1
 };
 
@@ -620,7 +619,8 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
   gap: 20px;
 }
 
-.input-panel, .output-panel {
+.input-panel,
+.output-panel {
   box-sizing: border-box;
   min-width: 500px;
 }
@@ -741,10 +741,21 @@ h4 {
   font-size: 0.9em;
 }
 
-.boat-name.ginseng { color: #E74C3C; }
-.boat-name.silk { color: #3498DB; }
-.boat-name.nutmeg { color: #F39C12; }
-.boat-name.jade { color: #2ECC71; }
+.boat-name.ginseng {
+  color: #E74C3C;
+}
+
+.boat-name.silk {
+  color: #3498DB;
+}
+
+.boat-name.nutmeg {
+  color: #F39C12;
+}
+
+.boat-name.jade {
+  color: #2ECC71;
+}
 
 .position-control {
   margin-bottom: 5px;
@@ -782,10 +793,21 @@ h4 {
   font-weight: bold;
 }
 
-.occupancy-header.ginseng { color: #E74C3C; }
-.occupancy-header.silk { color: #3498DB; }
-.occupancy-header.nutmeg { color: #F39C12; }
-.occupancy-header.jade { color: #2ECC71; }
+.occupancy-header.ginseng {
+  color: #E74C3C;
+}
+
+.occupancy-header.silk {
+  color: #3498DB;
+}
+
+.occupancy-header.nutmeg {
+  color: #F39C12;
+}
+
+.occupancy-header.jade {
+  color: #2ECC71;
+}
 
 .occupancy-slots {
   display: flex;
@@ -800,12 +822,14 @@ h4 {
   font-size: 0.85em;
 }
 
-.port-yard-grid, .special-grid {
+.port-yard-grid,
+.special-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 }
 
-.visualization-section, .profit-section {
+.visualization-section,
+.profit-section {
   background: #f9f9f9;
   border-radius: 8px;
   padding: 15px;
@@ -823,14 +847,16 @@ h4 {
 
 .track {
   display: flex;
-  flex-direction: column; /* 改为列式布局 */
+  flex-direction: column;
+  /* 改为列式布局 */
   margin-bottom: 12px;
 }
 
 .track-header {
   display: flex;
   margin-bottom: 4px;
-  grid-template-columns: auto 1fr auto; /* 头尾固定大小，中间伸展 */
+  grid-template-columns: auto 1fr auto;
+  /* 头尾固定大小，中间伸展 */
 }
 
 .track-label {
@@ -839,10 +865,21 @@ h4 {
 }
 
 
-.track-label.ginseng { color: #E74C3C; }
-.track-label.silk { color: #3498DB; }
-.track-label.nutmeg { color: #F39C12; }
-.track-label.jade { color: #2ECC71; }
+.track-label.ginseng {
+  color: #E74C3C;
+}
+
+.track-label.silk {
+  color: #3498DB;
+}
+
+.track-label.nutmeg {
+  color: #F39C12;
+}
+
+.track-label.jade {
+  color: #2ECC71;
+}
 
 .track-info {
   width: 100px;
@@ -883,7 +920,7 @@ h4 {
   background: white;
   border-radius: 8px;
   padding: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .profit-table h4 {
@@ -899,7 +936,8 @@ h4 {
   font-size: 0.9em;
 }
 
-.profit-table th, .profit-table td {
+.profit-table th,
+.profit-table td {
   border: 1px solid #eee;
   padding: 6px 8px;
   text-align: center;
@@ -923,8 +961,9 @@ h4 {
   .calculator-layout {
     flex-direction: column;
   }
-  
-  .input-panel, .output-panel {
+
+  .input-panel,
+  .output-panel {
     flex: none;
     width: 100%;
   }
@@ -948,10 +987,11 @@ h4 {
   border-collapse: collapse;
   background-color: white;
   border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.probability-table th, .probability-table td {
+.probability-table th,
+.probability-table td {
   padding: 8px 12px;
   border: 1px solid #eee;
   text-align: center;
@@ -966,11 +1006,19 @@ h4 {
   font-weight: bold;
 }
 
-.probability-table td.boat-name.ginseng { color: #E74C3C; }
-.probability-table td.boat-name.silk { color: #3498DB; }
-.probability-table td.boat-name.nutmeg { color: #F39C12; }
-.probability-table td.boat-name.jade { color: #2ECC71; }
+.probability-table td.boat-name.ginseng {
+  color: #E74C3C;
+}
 
+.probability-table td.boat-name.silk {
+  color: #3498DB;
+}
 
+.probability-table td.boat-name.nutmeg {
+  color: #F39C12;
+}
 
+.probability-table td.boat-name.jade {
+  color: #2ECC71;
+}
 </style>
