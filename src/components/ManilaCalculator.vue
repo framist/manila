@@ -734,7 +734,7 @@ h4 {
 }
 
 .boat-name.ginseng {
-  color: #E74C3C;
+  color: #b69100;
 }
 
 .boat-name.silk {
@@ -742,7 +742,7 @@ h4 {
 }
 
 .boat-name.nutmeg {
-  color: #F39C12;
+  color: #8f4c00;
 }
 
 .boat-name.jade {
@@ -783,22 +783,6 @@ h4 {
   margin: 0 0 8px 0;
   font-size: 1em;
   font-weight: bold;
-}
-
-.occupancy-header.ginseng {
-  color: #E74C3C;
-}
-
-.occupancy-header.silk {
-  color: #3498DB;
-}
-
-.occupancy-header.nutmeg {
-  color: #F39C12;
-}
-
-.occupancy-header.jade {
-  color: #2ECC71;
 }
 
 .occupancy-slots {
@@ -858,7 +842,7 @@ h4 {
 
 
 .track-label.ginseng {
-  color: #E74C3C;
+  color: #c5ae00;
 }
 
 .track-label.silk {
@@ -866,7 +850,7 @@ h4 {
 }
 
 .track-label.nutmeg {
-  color: #F39C12;
+  color: #844900;
 }
 
 .track-label.jade {
@@ -994,19 +978,4 @@ h4 {
   font-weight: bold;
 }
 
-.probability-table td.boat-name.ginseng {
-  color: #E74C3C;
-}
-
-.probability-table td.boat-name.silk {
-  color: #3498DB;
-}
-
-.probability-table td.boat-name.nutmeg {
-  color: #F39C12;
-}
-
-.probability-table td.boat-name.jade {
-  color: #2ECC71;
-}
 </style>
