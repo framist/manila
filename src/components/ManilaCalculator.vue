@@ -5,13 +5,12 @@
         <h3>使用说明</h3>
         <div class="instruction-content">
           <p>此计算器帮助玩家计算《马尼拉》桌游中各放置帮手位置的期望收益，辅助决策。</p>
+          <p>计算的期望是「如选择这个位置」下的期望</p>
+          <p><strong>假设与村规：</strong></p>
           <ol>
-            <li><strong>当前轮次</strong>：选择当前是第几次骰子投掷前，会影响船只到达目的地的概率计算。</li>
-            <li><strong>船只设置</strong>：调整滑块设置各船当前位置 (0-13)。</li>
-            <li><strong>已占位置</strong>：勾选已被占用的位置，系统会据此计算剩余位置的预期收益。</li>
-            <li><strong>收益分析</strong>：表格中绿色背景表示正收益的位置，灰色表示已占用位置。</li>
-            <li><strong>假重要设</strong>：基于后期不会有改变价值的位置占据状况被改变</li>
-            <li><strong>额外村规</strong>：海盗对无法影响第二轮移动结束时位于 13 号格子的平底船</li>
+            <li><strong>假设</strong>：海盗登上第一艘能上的船</li>
+            <li><strong>假设</strong>：基于后期不会有改变价值的位置占据状况被改变</li>
+            <li><strong>村规</strong>：海盗对无法影响第二轮移动结束时位于 13 号格子的平底船</li>
           </ol>
         </div>
         <a href="https://github.com/framist/manila" target="_blank" class="github-link" title="查看GitHub仓库">
@@ -29,10 +28,8 @@
     <div class="calculator-layout">
       <!-- 输入区域 - 左侧 -->
       <div class="input-panel">
-        <h2>游戏状态设置</h2>
-
         <div class="section boat-settings">
-          <h3>船只位置设置</h3>
+          <h3>游戏状态设置</h3>
           <div class="dice-round">
             <h4>当前轮次</h4>
             <div class="round-selector">
@@ -46,43 +43,43 @@
           <div class="boats-setup">
             <div v-for="(boat, index) in boats" :key="index" class="boat-item">
               <div class="boat-header">
-                <span class="boat-name" :class="boat.type">{{ boat.name }}</span>
                 <div class="boat-toggles">
                   <label class="checkbox-label">
                     <input type="checkbox" v-model="boat.isSelected" />
-                    本轮使用
+                    <span class="boat-name" :class="boat.type">{{ boat.name }}</span>
+                  </label>
+                </div>                
+                <div class="occupancy-slots">
+                  位置：
+                  <label v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`pos-${posIndex}`"
+                    class="slot-label">
+                    <input type="checkbox" v-model="pos.occupied" />
+                    {{ pos.cost }}比索
                   </label>
                 </div>
               </div>
 
-              <div class="position-control">
-                <span class="position-label">位置：{{ boat.position }}</span>
-                <input type="range" v-model.number="boat.position" :min="0" :max="13" />
-                <div class="position-track">
-                  <div class="track-mark" v-for="i in 14" :key="i - 1">{{ i - 1 }}</div>
+              <div class="track-header">
+                <span class="track-info">船只位置：{{ boat.position }}</span>
+                <span class="track-info">P(>13)={{ (calculateOver13Probability(boat) * 100).toFixed(1) }}%</span>
+                <span class="track-info">P(=13)={{ (calculateStopAt13Probability(boat) * 100).toFixed(1) }}%</span>
+                <span class="track-info">P(>12)={{ (calculateOver12Probability(boat) * 100).toFixed(1) }}%</span>
+              </div>
+              
+              <div class="track-slots">
+                <div class="track-slot" v-for="i in 14" :key="i - 1" :class="{ 'boat-here': i - 1 === boat.position }">
+                  {{ i - 1 }}
                 </div>
+              </div>
+              <div class="position-control">
+                <input type="range" v-model.number="boat.position" :min="0" :max="13" />
               </div>
             </div>
           </div>
         </div>
 
         <div class="section special-settings">
-          <h3>已占用位置设置</h3>
-
-          <div class="boat-occupancy">
-            <h4>平底船已占用位置</h4>
-            <div v-for="(boat, boatIndex) in visibleBoats" :key="`boat-${boatIndex}`" class="occupancy-group">
-              <h5 class="occupancy-header" :class="boat.type">{{ boat.name }}</h5>
-              <div class="occupancy-slots">
-                <label v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`pos-${posIndex}`"
-                  class="slot-label">
-                  <input type="checkbox" v-model="pos.occupied" />
-                  位置{{ posIndex + 1 }} ({{ pos.cost }}比索)
-                </label>
-              </div>
-            </div>
-          </div>
-
+          
           <div class="port-yard-occupancy">
             <h4>港口与造船厂已占用位置</h4>
             <div class="occupancy-group">
@@ -92,9 +89,8 @@
                   {{ pos.name }} ({{ pos.cost }}比索)
                 </label>
               </div>
-            </div>
+            </div>                      
           </div>
-
           <div class="special-occupancy">
             <h4>特殊位置已占用</h4>
             <div class="occupancy-group">
@@ -111,38 +107,6 @@
 
       <!-- 输出区域 - 右侧 -->
       <div class="output-panel">
-        <h2>期望收益分析</h2>
-
-        <div class="visualization-section">
-          <div class="round-display">
-            当前设置：{{ getCurrentRoundLabel() }}，剩余骰子次数：{{ remainingDiceThrows }}
-          </div>
-
-          <h3>船只位置可视化</h3>
-          <div class="track-visualization">
-            <div class="track" v-for="(boat, index) in visibleBoats" :key="index">
-              <div class="track-header">
-                <span class="track-label" :class="boat.type">{{ boat.name }}
-                  <span v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`occupied-${posIndex}`"
-                    :class="{ 'occupied': pos.occupied }">●</span>
-                </span>
-                <span class="track-info">P(>13)={{ (calculateOver13Probability(boat) * 100).toFixed(1) }}%</span>
-                <span class="track-info">P(=13)={{ (calculateStopAt13Probability(boat) * 100).toFixed(1) }}%</span>
-                <span class="track-info">P(>12)={{ (calculateOver12Probability(boat) * 100).toFixed(1) }}%</span>
-              </div>
-
-              <div class="track-slots">
-                <div class="track-slot" v-for="i in 14" :key="i - 1" :class="{ 'boat-here': i - 1 === boat.position }">
-                  {{ i - 1 }}
-                </div>
-              </div>
-
-
-            </div>
-          </div>
-
-        </div>
-
         <div class="profit-section">
           <h3>收益期望分析</h3>
 
@@ -157,7 +121,7 @@
                     <th>成本</th>
                     <th>分成收益</th>
                     <th>到达概率</th>
-                    <th>期望收益</th>
+                    <th>期望净收益</th>
                     <th>状态</th>
                   </tr>
                 </thead>
@@ -165,15 +129,15 @@
                   <template v-for="(boat, boatIndex) in visibleBoats" :key="boatIndex">
                     <tr v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`${boatIndex}-${posIndex}`" :class="{
                       'high-profit': !pos.occupied && calculateExpectedProfit(boat, pos) > 0,
-                      'occupied': pos.occupied
+                      'isAvailable': pos.occupied
                     }">
                       <td>{{ boat.name }}</td>
                       <td>{{ posIndex + 1 }}</td>
                       <td>{{ pos.cost }}比索</td>
-                      <td>{{ calculateProfit(boat, pos).toFixed(1) }}比索</td>
-                      <td>{{ (calculateOver13Probability(boat) * 100).toFixed(0) }}%</td>
+                      <td>{{ calculateMaxProfit(boat, pos).toFixed(1) }}比索</td>
+                      <td>{{ (calculateArrivalProbability(boat) * 100).toFixed(0) }}%</td>
                       <td>{{ calculateExpectedProfit(boat, pos).toFixed(1) }}比索</td>
-                      <td>{{ pos.occupied ? '已占用' : '可选择' }}</td>
+                      <td><input type="checkbox" v-model="pos.occupied" /></td>
                     </tr>
                   </template>
                 </tbody>
@@ -189,21 +153,21 @@
                     <th>成本</th>
                     <th>收益</th>
                     <th>到达概率</th>
-                    <th>期望收益</th>
+                    <th>期望净收益</th>
                     <th>状态</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(port, portIndex) in portYardPositions" :key="portIndex" :class="{
-                    'high-profit': !port.occupied && calculatePortExpectedProfit(port) > 0,
-                    'occupied': port.occupied
+                  <tr v-for="(pos, portIndex) in portYardPositions" :key="portIndex" :class="{
+                    'high-profit': !pos.occupied && calculatePortExpectedProfit(pos) > 0,
+                    'isAvailable': pos.occupied
                   }">
-                    <td>{{ port.name }}</td>
-                    <td>{{ port.cost }}比索</td>
-                    <td>{{ port.profit }}比索</td>
-                    <td>{{ (calculatePortArrivalProbability(port) * 100).toFixed(0) }}%</td>
-                    <td>{{ calculatePortExpectedProfit(port).toFixed(1) }}比索</td>
-                    <td>{{ port.occupied ? '已占用' : '可选择' }}</td>
+                    <td>{{ pos.name }}</td>
+                    <td>{{ pos.cost }}比索</td>
+                    <td>{{ pos.profit }}比索</td>
+                    <td>{{ (calculatePortArrivalProbability(pos) * 100).toFixed(0) }}%</td>
+                    <td>{{ calculatePortExpectedProfit(pos).toFixed(1) }}比索</td>
+                    <td><input type="checkbox" v-model="pos.occupied" /></td>
                   </tr>
                 </tbody>
               </table>
@@ -216,23 +180,19 @@
                   <tr>
                     <th>位置</th>
                     <th>成本</th>
-                    <th>收益</th>
-                    <th>触发概率</th>
-                    <th>期望收益</th>
+                    <th>期望净收益</th>
                     <th>状态</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="(pos, index) in specialPositions" :key="index" :class="{
                     'high-profit': !pos.occupied && calculateSpecialExpectedProfit(pos) > 0,
-                    'occupied': pos.occupied
+                    'isAvailable': pos.occupied
                   }">
                     <td>{{ pos.name }}</td>
                     <td>{{ pos.cost }}比索</td>
-                    <td>{{ calculateSpecialProfit(pos).toFixed(1) }}比索</td>
-                    <td>{{ (calculateSpecialProbability(pos) * 100).toFixed(0) }}%</td>
                     <td>{{ calculateSpecialExpectedProfit(pos).toFixed(1) }}比索</td>
-                    <td>{{ pos.occupied ? '已占用' : '可选择' }}</td>
+                    <td><input type="checkbox" v-model="pos.occupied" /></td>
                   </tr>
                 </tbody>
               </table>
@@ -349,6 +309,8 @@ interface SpecialPosition {
   occupied: boolean;
 }
 
+// todo 限制船只上的位置只能从前往后占领
+
 // 计算可见的船只（已选择的）
 const visibleBoats = computed<Boat[]>(() => {
   return boats.value.filter(boat => boat.isSelected);
@@ -387,7 +349,6 @@ const getDpbyN = (n: number) => {
   return dp
 }
 
-// 原有的到达终点概率函数
 const calculateOver13Probability = (boat: Boat): number => {
   const throwsLeft = remainingDiceThrows.value;
   let pos = boat.position;
@@ -397,6 +358,7 @@ const calculateOver13Probability = (boat: Boat): number => {
 const calculateOver12Probability = (boat: Boat): number => {
   const throwsLeft = remainingDiceThrows.value;
   let pos = boat.position;
+  if (pos >= 12) return 1; // 已经在 12 号格以上
   return getDpbyN(12)[pos][throwsLeft - 1]
 };
 
@@ -404,6 +366,7 @@ const calculateOver12Probability = (boat: Boat): number => {
 const calculateStopAt13Probability = (boat: Boat): number => {
   const throwsLeft = remainingDiceThrows.value;
   let pos = boat.position;
+  if (pos >= 13) return 0;
   return getDpbyN(12)[pos][throwsLeft - 1]
     - getDpbyN(13)[pos][throwsLeft - 1] // 计算停在 13 的概率 
 };
@@ -421,34 +384,65 @@ const hasPiratesActive = (): boolean => {
   );
 };
 
-// 获取潜在收益
-const getPotentialProfit = (boat: Boat, shareBase: number): number => {
-  return boat.profit / shareBase;
-};
-
-// 计算货物平底船的收益（考虑海盗劫掠）
-const calculateProfit = (boat: Boat, pos: Position): number => {
+// 计算货物平底船的最大分成收益
+const calculateMaxProfit = (boat: Boat, pos: Position): number => {
   // 获取此平底船已占用的位置数
   const occupied = countOccupiedPositions(boat.type);
   const shareBase = occupied + 1;  // +1 是因为将计算将占用的位置收益
 
-  // 第三轮有海盗时，停在 13 号的船员无收益
-  if (remainingDiceThrows.value === 1 && hasPiratesActive()) {
-    const stop13Prob = calculateStopAt13Probability(boat);
-    const normalProfit = getPotentialProfit(boat, shareBase);
-    // 停在 13 号概率部分收益归 0，其余正常
-    return normalProfit * (1 - stop13Prob);
-  }
-  return getPotentialProfit(boat, shareBase);
+  return boat.profit / shareBase;
 };
 
-// 计算货物平底船的期望收益
+// 考虑可能存在海盗下的到达概率
+const calculateArrivalProbability = (boat: Boat): number => {
+  if (hasPiratesActive()) {
+    return calculateOver13Probability(boat);
+  } else {
+    return calculateOver12Probability(boat);
+  }
+};
+
+// 计算货物平底船的期望净收益
 const calculateExpectedProfit = (boat: Boat, pos: Position): number => {
   if (!boat.isSelected) return -pos.cost;
-  // 若第三轮有海盗，停在 13 号的概率部分收益归 0
-  const profit = calculateProfit(boat, pos);
+  let profit = calculateMaxProfit(boat, pos);
+  if (hasPiratesActive()) {
+    // 如果有海盗存在，收益会被劫掠
+    profit = profit * calculateArrivalProbability(boat);
+  }
   const probability = calculateOver13Probability(boat);
   return profit * probability - pos.cost;
+};
+
+/*
+有以下独立二元事件的概率 P_1 P_2 ... P_n
+如何计算有 m 个事件发生的概率？
+*/
+/**
+ * 计算 n 个独立事件中恰好有 m 个发生的概率
+ * @param probs  事件发生概率数组 P_1 … P_n
+ * @param m      目标发生事件个数 (0 ≤ m ≤ n)
+ * @returns      恰有 m 个事件发生的概率
+ */
+function probExactlyM(probs: number[], m: number): number {
+  if (m < 0 || m > probs.length) return 0;
+  // dp[k] 表示已处理到当前事件时，恰有 k 个发生的概率
+  const dp = new Array(m + 1).fill(0);
+  dp[0] = 1;
+
+  for (const p of probs) {
+    // 逆序遍历防止覆盖上一轮值
+    for (let k = Math.min(m, probs.length); k >= 0; k--) {
+      dp[k] = dp[k] * (1 - p) + (k ? dp[k - 1] * p : 0);
+    }
+  }
+  return dp[m];}
+
+
+// 计算 n 个船能安全到达终点的期望
+const calculateSafeArrivalProbability = (n: number): number => {
+  const probs = visibleBoats.value.map(boat => calculateArrivalProbability(boat));
+  return probExactlyM(probs, n);
 };
 
 // 计算港口/造船厂到达概率
@@ -456,29 +450,39 @@ const calculatePortArrivalProbability = (port: PortYardPosition): number => {
   if (visibleBoats.value.length === 0) return 0;
 
   // 港口的概率是到达终点的概率，造船厂的概率是无法到达终点的概率
-  let totalProb = 0;
-
-  // 统计港口总数和造船厂总数
-  const portCount = Math.max(
-    portYardPositions.value.filter(p => p.type === 'port' && !p.occupied).length,
-    1
-  );
-  const yardCount = Math.max(
-    portYardPositions.value.filter(p => p.type === 'yard' && !p.occupied).length,
-    1
-  );
-
-  visibleBoats.value.forEach(boat => {
+  // 船只优先停入靠前的港口/造船厂
+  let p = [
+    calculateSafeArrivalProbability(1), 
+    calculateSafeArrivalProbability(2), 
+    calculateSafeArrivalProbability(3)
+  ];
+  if (port.position === 'A') {
+    // A 港口/造船厂
     if (port.type === 'port') {
-      // 港口：船到达终点的概率
-      totalProb += calculateOver13Probability(boat) / portCount;
+      return p[0] + p[1] + p[2];
     } else {
-      // 造船厂：船未到达终点的概率
-      totalProb += (1 - calculateOver13Probability(boat)) / yardCount;
+      return 1 - (p[0] + p[1] + p[2]);
     }
-  });
+  }
+  if (port.position === 'B') {
+    // B 港口/造船厂
+    if (port.type === 'port') {
+      return p[1] + p[2];
+    } else {
+      return 1 - (p[1] + p[2]);
+    }
+  }
+  if (port.position === 'C') {
+    // C 港口/造船厂
+    if (port.type === 'port') {
+      return p[2];
+    } else {
+      return 1 - p[2];
+    }
+  } else {
+    return 0;
+  }
 
-  return Math.min(totalProb, 1); // 概率最大为 1
 };
 
 // 计算港口/造船厂期望收益（固定收益）
@@ -490,57 +494,45 @@ const calculatePortExpectedProfit = (port: PortYardPosition): number => {
 // 计算特殊位置概率
 const calculateSpecialProbability = (pos: SpecialPosition): number => {
   if (pos.type === 'pirate') {
-    // 只在第三轮有概率
-    if (remainingDiceThrows.value !== 1) return 0;
-    // 只要有船停在 13 号就触发
-    let prob = 0;
+    let prob = 1;
     visibleBoats.value.forEach(boat => {
-      prob += calculateStopAt13Probability(boat);
+      prob *= 1 - calculateStopAt13Probability(boat);
     });
+    prob = 1 - prob
     return Math.min(prob, 1);
   }
   if (pos.type === 'pilot') return 0;
   if (pos.type === 'insurance') {
-    let allArriveProbability = 1;
-    visibleBoats.value.forEach(boat => {
-      allArriveProbability *= calculateOver13Probability(boat);
-    });
-    return 1 - allArriveProbability;
+    return 1;
   }
   return 0;
 };
 
 // 计算特殊位置收益
 const calculateSpecialProfit = (pos: SpecialPosition): number => {
-  if (pos.occupied) return 0;
   if (pos.type === 'pirate') {
-    // 只在第三轮有收益
-    if (remainingDiceThrows.value !== 1) return 0;
     // 统计所有停在 13 号的船的收益
     let totalBooty = 0;
-    visibleBoats.value.forEach(boat => {
-      const stop13Prob = calculateStopAt13Probability(boat);
-      let booty = 0;
-      switch (boat.type) {
-        case 'ginseng': booty = 18; break;
-        case 'silk': booty = 30; break;
-        case 'nutmeg': booty = 24; break;
-        case 'jade': booty = 36; break;
+    // todo 收益是第一个能到 13 的船
+    for (const boat of visibleBoats.value) {
+      if (calculateStopAt13Probability(boat) > 0) {
+        totalBooty = boat.profit;
+        break;
       }
-      totalBooty += booty * stop13Prob;
-    });
+    }
     // 海盗船长和船员平分
-    const pirates = specialPositions.value.filter(p => p.type === 'pirate' && !p.occupied);
+    const pirates = specialPositions.value.filter(p => p.type === 'pirate' && p.occupied);
     const pirateCount = pirates.length;
-    if (pirateCount === 0) return 0;
-    return totalBooty / pirateCount;
+    if (pirateCount === 0) return totalBooty;
+    return totalBooty / (pirateCount + 1); // 如果选择下的期望
   }
   if (pos.type === 'insurance') {
-    let potentialPayout = visibleBoats.value.reduce((total, boat) => {
-      const failProb = 1 - calculateOver13Probability(boat);
-      return total + 10 * failProb;
-    }, 0);
-    return pos.profit - potentialPayout;
+    // todo
+    let booty = pos.profit;
+    booty -= calculateSafeArrivalProbability(1) * 6
+    booty -= calculateSafeArrivalProbability(2) * 8
+    booty -= calculateSafeArrivalProbability(3) * 15
+    return booty;
   }
   if (pos.type === 'pilot') {
     return 0;
@@ -548,7 +540,7 @@ const calculateSpecialProfit = (pos: SpecialPosition): number => {
   return pos.profit || 0;
 };
 
-// 计算特殊位置期望收益
+// 计算特殊位置期望净收益
 const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
   const probability = calculateSpecialProbability(pos);
   const profit = calculateSpecialProfit(pos);
@@ -887,10 +879,6 @@ h4 {
   color: #2c3e50;
 }
 
-.occupied {
-  color: #ccc;
-}
-
 /* 调整 track-slots 使其占满整行 */
 .track-slots {
   display: flex;
@@ -952,7 +940,7 @@ h4 {
   background-color: rgba(46, 204, 113, 0.15);
 }
 
-.occupied {
+.isAvailable {
   color: #ccc;
 }
 
