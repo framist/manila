@@ -4,8 +4,8 @@
       <div class="instructions">
         <h3>使用说明</h3>
         <div class="instruction-content">
-          <p>此计算器帮助玩家计算《马尼拉》桌游中各放置帮手位置的期望收益，辅助决策。</p>
-          <p>计算的期望是「如选择这个位置」下的期望</p>
+          <p>此计算器帮助玩家计算《马尼拉》桌游中各放置帮手位置的期望收益，辅助决策。
+          <br />注意：计算的期望是「如选择这个位置」下的期望</p>
           <p><strong>假设与村规：</strong></p>
           <ol>
             <li><strong>假设</strong>：海盗登上第一艘能上的船</li>
@@ -553,26 +553,102 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
 };
 </script>
 
-<style scoped>
+<style>
+:root {
+  --bg-primary: #f9f9f9;
+  --bg-secondary: #ffffff;
+  --text-primary: #2c3e50;
+  --text-secondary: #777;
+  --border-color: #e0e0e0;
+  --border-light: #eee;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --highlight-low: rgba(46, 204, 113, 0.1);
+  --highlight-high: rgba(46, 204, 113, 0.2);
+  
+  /* 船只颜色 */
+  --ginseng-color: #b69100;
+  --silk-color: #3498DB;
+  --nutmeg-color: #8f4c00;
+  --jade-color: #2ECC71;
+  
+  /* 交互元素 */
+  --input-bg: #f5f5f5;
+  --input-hover: #e9e9e9;
+  --disabled-color: #ccc;
+  --boat-highlight: #ffeb3b;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #aaa;
+    --border-color: #444;
+    --border-light: #555;
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --highlight-low: rgba(46, 204, 113, 0.15);
+    --highlight-high: rgba(46, 204, 113, 0.25);
+    
+    /* 深色模式下调整船只颜色以提高可见性 */
+    --ginseng-color: #ffd54f;
+    --silk-color: #64b5f6;
+    --nutmeg-color: #ffab91;
+    --jade-color: #81c784;
+    
+    /* 交互元素 */
+    --input-bg: #333;
+    --input-hover: #444;
+    --disabled-color: #666;
+    --boat-highlight: #f57f17; /* 深色模式下船只位置高亮色 */
+  }
+}
+
 .manila-calculator {
   width: 100%;
   max-width: 1800px;
   margin: 0 auto;
   box-sizing: border-box;
+  color: var(--text-primary);
 }
 
-/* 添加顶部使用说明样式 */
-.instructions-wrapper {
+/* 布局结构 */
+.calculator-layout {
+  display: flex;
   width: 100%;
+  gap: 20px;
+}
+
+.input-panel {
+  flex: 0 0 280px;
+  min-width: 500px;
+}
+
+.output-panel {
+  flex: 1;
+  min-width: 500px;
+}
+
+/* 通用卡片样式 */
+.section, .instructions, .profit-section {
   margin-bottom: 20px;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: var(--shadow);
 }
 
 .instructions {
   position: relative;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.instructions-wrapper {
+  width: 100%;
+  margin-bottom: 20px;
 }
 
 .instruction-content {
@@ -580,16 +656,39 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
   font-size: 0.9em;
 }
 
-/* GitHub 角落链接样式 */
+/* 通用内部容器样式 */
+.dice-round, .boat-item, .occupancy-group, .profit-table {
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  padding: 10px;
+  border: 1px solid var(--border-light);
+  margin-bottom: 12px;
+}
+
+/* 标题样式 */
+h2, h3, h4 {
+  color: var(--text-primary);
+  margin-top: 0;
+}
+
+h3 {
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+h4 {
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+/* GitHub 链接样式 */
 .github-link {
   position: absolute;
   top: 0;
   right: 0;
-  border: 0;
-  display: block;
   width: 40px;
   height: 40px;
-  background-color: #f1f1f1;
+  background-color: var(--bg-secondary);
   border-bottom-left-radius: 4px;
   text-decoration: none;
 }
@@ -598,7 +697,7 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
   position: absolute;
   top: 8px;
   right: 8px;
-  fill: #151513;
+  fill: var(--text-primary);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -609,47 +708,7 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
   height: 24px;
 }
 
-.calculator-layout {
-  display: flex;
-  width: 100%;
-  gap: 20px;
-}
-
-.input-panel,
-.output-panel {
-  box-sizing: border-box;
-  min-width: 500px;
-}
-
-.input-panel {
-  flex: 0 0 280px;
-}
-
-.output-panel {
-  flex: 1;
-}
-
-.section {
-  margin-bottom: 20px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.dice-round {
-  margin-bottom: 15px;
-  background: white;
-  border-radius: 6px;
-  padding: 10px;
-  border: 1px solid #eee;
-}
-
-.dice-round h4 {
-  margin-top: 0;
-  margin-bottom: 8px;
-}
-
+/* 轮次选择器 */
 .round-selector {
   display: flex;
   flex-wrap: wrap;
@@ -662,53 +721,19 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
   gap: 5px;
   padding: 4px 8px;
   border-radius: 4px;
-  background-color: #f5f5f5;
+  background-color: var(--input-bg);
   cursor: pointer;
 }
 
 .round-option:hover {
-  background-color: #e9e9e9;
+  background-color: var(--input-hover);
 }
 
-.round-display {
-  padding: 8px;
-  background: #f0f8ff;
-  border-radius: 4px;
-  font-weight: 500;
-  text-align: center;
-  margin-bottom: 15px;
-}
-
-h2 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #2c3e50;
-  font-size: 1.5rem;
-}
-
-h3 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: #2c3e50;
-  font-size: 1.2rem;
-}
-
-h4 {
-  margin-bottom: 10px;
-  font-size: 1rem;
-}
-
+/* 船只样式 */
 .boats-setup {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.boat-item {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 10px;
-  background-color: white;
 }
 
 .boat-header {
@@ -730,37 +755,33 @@ h4 {
   flex-wrap: wrap;
 }
 
-.checkbox-label {
+/* 船只颜色 */
+.boat-name.ginseng, .track-label.ginseng {
+  color: var(--ginseng-color);
+}
+
+.boat-name.silk, .track-label.silk {
+  color: var(--silk-color);
+}
+
+.boat-name.nutmeg, .track-label.nutmeg {
+  color: var(--nutmeg-color);
+}
+
+.boat-name.jade, .track-label.jade {
+  color: var(--jade-color);
+}
+
+/* 表单元素 */
+.checkbox-label, .slot-label {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.9em;
-}
-
-.boat-name.ginseng {
-  color: #b69100;
-}
-
-.boat-name.silk {
-  color: #3498DB;
-}
-
-.boat-name.nutmeg {
-  color: #8f4c00;
-}
-
-.boat-name.jade {
-  color: #2ECC71;
+  font-size: 0.85em;
 }
 
 .position-control {
   margin-bottom: 5px;
-}
-
-.position-label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 0.9em;
 }
 
 .position-control input[type="range"] {
@@ -768,106 +789,30 @@ h4 {
   margin: 5px 0;
 }
 
-.position-track {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75em;
-  color: #777;
-}
-
-.occupancy-group {
-  margin-bottom: 15px;
-  padding: 10px;
-  border: 1px solid #eee;
-  border-radius: 5px;
-  background-color: white;
-}
-
-.occupancy-header {
-  margin: 0 0 8px 0;
-  font-size: 1em;
-  font-weight: bold;
-}
-
+/* 位置网格布局 */
 .occupancy-slots {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.slot-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.85em;
-}
-
-.port-yard-grid,
-.special-grid {
+.port-yard-grid, .special-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 }
 
-.visualization-section,
-.profit-section {
-  background: #f9f9f9;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.track-visualization {
-  margin: 15px 0;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 15px;
-  background-color: white;
-}
-
-.track {
-  display: flex;
-  flex-direction: column;
-  /* 改为列式布局 */
-  margin-bottom: 12px;
-}
-
+/* 轨道样式 */
 .track-header {
   display: flex;
   margin-bottom: 4px;
-  grid-template-columns: auto 1fr auto;
-  /* 头尾固定大小，中间伸展 */
-}
-
-.track-label {
-  width: 100px;
-  font-weight: bold;
-}
-
-
-.track-label.ginseng {
-  color: #c5ae00;
-}
-
-.track-label.silk {
-  color: #3498DB;
-}
-
-.track-label.nutmeg {
-  color: #844900;
-}
-
-.track-label.jade {
-  color: #2ECC71;
 }
 
 .track-info {
   width: 100px;
   font-size: small;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
-/* 调整 track-slots 使其占满整行 */
 .track-slots {
   display: flex;
   width: 100%;
@@ -875,35 +820,23 @@ h4 {
 
 .track-slot {
   flex: 1;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   text-align: center;
   padding: 5px 2px;
   font-size: 11px;
 }
 
 .boat-here {
-  background-color: #ffeb3b;
+  background-color: var(--boat-highlight);
   font-weight: bold;
+  color: #333; /* 确保深色背景下文字可见 */
 }
 
+/* 收益表格 */
 .profit-tables {
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-.profit-table {
-  background: white;
-  border-radius: 8px;
-  padding: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.profit-table h4 {
-  margin-top: 0;
-  color: #2c3e50;
-  font-size: 1.1em;
-  margin-bottom: 10px;
 }
 
 .profit-table table {
@@ -914,28 +847,27 @@ h4 {
 
 .profit-table th,
 .profit-table td {
-  border: 1px solid #eee;
+  border: 1px solid var(--border-light);
   padding: 6px 8px;
   text-align: center;
 }
 
 .profit-table th {
-  background-color: #f5f5f5;
+  background-color: var(--bg-primary);
   font-weight: bold;
 }
 
+/* 高亮样式 */
 .high-profit {
-  background-color: rgba(46, 204, 113, 0.1);
+  background-color: var(--highlight-low);
 }
 
-
 .higher-profit {
-  background-color: rgba(46, 204, 113, 0.2);
-
+  background-color: var(--highlight-high);
 }
 
 .isAvailable {
-  color: #ccc;
+  color: var(--disabled-color);
 }
 
 /* 响应式调整 */
@@ -944,8 +876,7 @@ h4 {
     flex-direction: column;
   }
 
-  .input-panel,
-  .output-panel {
+  .input-panel, .output-panel {
     flex: none;
     width: 100%;
   }
@@ -956,35 +887,4 @@ h4 {
     padding: 0 20px;
   }
 }
-
-
-
-.probability-table-container {
-  margin: 10px 0 20px 0;
-  overflow-x: auto;
-}
-
-.probability-table {
-  width: 100%;
-  border-collapse: collapse;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.probability-table th,
-.probability-table td {
-  padding: 8px 12px;
-  border: 1px solid #eee;
-  text-align: center;
-}
-
-.probability-table th {
-  background-color: #f5f5f5;
-  font-weight: bold;
-}
-
-.probability-table td.boat-name {
-  font-weight: bold;
-}
-
 </style>

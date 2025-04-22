@@ -5,6 +5,8 @@
 
 本项目是一个基于 Vue 3 + Vite 的《马尼拉》桌游期望收益计算器，帮助玩家根据当前局势和规则，科学决策。
 
+![fig](https://i-blog.csdnimg.cn/direct/bae13d4218a54ac8a5768b183467554d.png)
+
 ## 快速开始
 
 1. 安装依赖：
