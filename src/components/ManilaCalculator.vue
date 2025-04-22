@@ -92,7 +92,7 @@
             </div>                      
           </div>
           <div class="special-occupancy">
-            <h4>特殊位置已占用</h4>
+            <h4>特殊位置已占用位置</h4>
             <div class="occupancy-group">
               <div class="occupancy-slots special-grid">
                 <label v-for="(pos, posIndex) in specialPositions" :key="`special-${posIndex}`" class="slot-label">
@@ -101,6 +101,17 @@
                 </label>
               </div>
             </div>
+
+
+          <div class="boats-setup">
+              <div class="position-control">
+                <label for="pirate-probability">设置无海盗时可能存在海盗的概率概率：</label>
+                <span>{{ (pirateProbability * 100).toFixed(0) }}%</span>
+                <span v-if="hasPiratesActive()">（实际海盗已存在）</span>
+                <input type="range" v-model.number="pirateProbability" :min="0" :max="1" step="0.01" />
+              </div>
+          </div>
+
           </div>
         </div>
       </div>
@@ -129,6 +140,7 @@
                   <template v-for="(boat, boatIndex) in visibleBoats" :key="boatIndex">
                     <tr v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`${boatIndex}-${posIndex}`" :class="{
                       'high-profit': !pos.occupied && calculateExpectedProfit(boat, pos) > 0,
+                      'higher-profit': !pos.occupied && calculateExpectedProfit(boat, pos) > 2,
                       'isAvailable': pos.occupied
                     }">
                       <td>{{ boat.name }}</td>
@@ -160,6 +172,7 @@
                 <tbody>
                   <tr v-for="(pos, portIndex) in portYardPositions" :key="portIndex" :class="{
                     'high-profit': !pos.occupied && calculatePortExpectedProfit(pos) > 0,
+                    'higher-profit': !pos.occupied && calculatePortExpectedProfit(pos) > 2,
                     'isAvailable': pos.occupied
                   }">
                     <td>{{ pos.name }}</td>
@@ -187,6 +200,7 @@
                 <tbody>
                   <tr v-for="(pos, index) in specialPositions" :key="index" :class="{
                     'high-profit': !pos.occupied && calculateSpecialExpectedProfit(pos) > 0,
+                    'higher-profit': !pos.occupied && calculateSpecialExpectedProfit(pos) > 2,
                     'isAvailable': pos.occupied
                   }">
                     <td>{{ pos.name }}</td>
@@ -214,6 +228,14 @@ const diceRounds = [
   { label: '第三次投掷前', value: 3 }
 ];
 const currentRound = ref(1);
+
+// 无海盗时可能存在海盗的概率
+const pirateProbability = ref(0.5);
+
+// 如果海盗存在，强制设置为 1
+const pirateProbabilityForced = computed(() => {
+  return hasPiratesActive() ? 1 : pirateProbability.value;
+});
 
 // 计算剩余骰子次数
 const remainingDiceThrows = computed(() => {
@@ -270,11 +292,11 @@ const portYardPositions = ref([
 
 // 定义特殊位置
 const specialPositions = ref([
-  { name: '海盗船长', type: 'pirate', position: 'captain', cost: 5, profit: 0, occupied: false },
-  { name: '海盗船员', type: 'pirate', position: 'crew', cost: 5, profit: 0, occupied: false },
   { name: '大领航员', type: 'pilot', position: 'major', cost: 5, profit: 0, occupied: false },
   { name: '小领航员', type: 'pilot', position: 'minor', cost: 2, profit: 0, occupied: false },
-  { name: '保险员', type: 'insurance', position: 'insurance', cost: 0, profit: 10, occupied: false }
+  { name: '保险员', type: 'insurance', position: 'insurance', cost: 0, profit: 10, occupied: false },
+  { name: '海盗船长', type: 'pirate', position: 'captain', cost: 5, profit: 0, occupied: false },
+  { name: '海盗船员', type: 'pirate', position: 'crew', cost: 5, profit: 0, occupied: false }
 ]);
 
 
@@ -389,8 +411,11 @@ const calculateMaxProfit = (boat: Boat, pos: Position): number => {
   // 获取此平底船已占用的位置数
   const occupied = countOccupiedPositions(boat.type);
   const shareBase = occupied + 1;  // +1 是因为将计算将占用的位置收益
+  // shareBase 最大不能超过该船位置数
+  const maxShareBase = getBoatPositions(boat.type).length;
+  const finalShareBase = Math.min(shareBase, maxShareBase);
 
-  return boat.profit / shareBase;
+  return boat.profit / finalShareBase;
 };
 
 // 考虑可能存在海盗下的到达概率
@@ -398,7 +423,8 @@ const calculateArrivalProbability = (boat: Boat): number => {
   if (hasPiratesActive()) {
     return calculateOver13Probability(boat);
   } else {
-    return calculateOver12Probability(boat);
+    return calculateOver12Probability(boat) * (1 - pirateProbabilityForced.value)
+      + pirateProbabilityForced.value * calculateOver13Probability(boat);
   }
 };
 
@@ -406,10 +432,7 @@ const calculateArrivalProbability = (boat: Boat): number => {
 const calculateExpectedProfit = (boat: Boat, pos: Position): number => {
   if (!boat.isSelected) return -pos.cost;
   let profit = calculateMaxProfit(boat, pos);
-  if (hasPiratesActive()) {
-    // 如果有海盗存在，收益会被劫掠
-    profit = profit * calculateArrivalProbability(boat);
-  }
+  profit = profit * calculateArrivalProbability(boat);
   const probability = calculateOver13Probability(boat);
   return profit * probability - pos.cost;
 };
@@ -491,47 +514,30 @@ const calculatePortExpectedProfit = (port: PortYardPosition): number => {
   return port.profit * probability - port.cost;
 };
 
-// 计算特殊位置概率
-const calculateSpecialProbability = (pos: SpecialPosition): number => {
-  if (pos.type === 'pirate') {
-    let prob = 1;
-    visibleBoats.value.forEach(boat => {
-      prob *= 1 - calculateStopAt13Probability(boat);
-    });
-    prob = 1 - prob
-    return Math.min(prob, 1);
-  }
-  if (pos.type === 'pilot') return 0;
-  if (pos.type === 'insurance') {
-    return 1;
-  }
-  return 0;
-};
 
-// 计算特殊位置收益
+// 计算特殊位置期望收益
 const calculateSpecialProfit = (pos: SpecialPosition): number => {
   if (pos.type === 'pirate') {
     // 统计所有停在 13 号的船的收益
     let totalBooty = 0;
-    // todo 收益是第一个能到 13 的船
-    for (const boat of visibleBoats.value) {
-      if (calculateStopAt13Probability(boat) > 0) {
-        totalBooty = boat.profit;
-        break;
-      }
-    }
+
+    visibleBoats.value.forEach(boat => {
+      // prob *= 1 - calculateStopAt13Probability(boat);
+      totalBooty += calculateStopAt13Probability(boat) * boat.profit; 
+    });
+    
     // 海盗船长和船员平分
     const pirates = specialPositions.value.filter(p => p.type === 'pirate' && p.occupied);
     const pirateCount = pirates.length;
-    if (pirateCount === 0) return totalBooty;
-    return totalBooty / (pirateCount + 1); // 如果选择下的期望
+    // 如果选择下的期望
+    return totalBooty / Math.min(pirateCount + 1, 2);
   }
   if (pos.type === 'insurance') {
     // todo
     let booty = pos.profit;
-    booty -= calculateSafeArrivalProbability(1) * 6
-    booty -= calculateSafeArrivalProbability(2) * 8
-    booty -= calculateSafeArrivalProbability(3) * 15
+    booty -= calculateSafeArrivalProbability(2) * 6
+    booty -= calculateSafeArrivalProbability(1) * 8
+    booty -= calculateSafeArrivalProbability(0) * 15
     return booty;
   }
   if (pos.type === 'pilot') {
@@ -542,9 +548,8 @@ const calculateSpecialProfit = (pos: SpecialPosition): number => {
 
 // 计算特殊位置期望净收益
 const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
-  const probability = calculateSpecialProbability(pos);
   const profit = calculateSpecialProfit(pos);
-  return profit * probability - pos.cost;
+  return profit - pos.cost;
 };
 </script>
 
@@ -564,7 +569,6 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
 
 .instructions {
   position: relative;
-  background-color: #f8f9fa;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 15px;
@@ -921,7 +925,13 @@ h4 {
 }
 
 .high-profit {
-  background-color: rgba(46, 204, 113, 0.15);
+  background-color: rgba(46, 204, 113, 0.1);
+}
+
+
+.higher-profit {
+  background-color: rgba(46, 204, 113, 0.2);
+
 }
 
 .isAvailable {
@@ -957,7 +967,6 @@ h4 {
 .probability-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
