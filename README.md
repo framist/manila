@@ -1,11 +1,16 @@
-# 马尼拉期望计算器
+<center>
+<!-- ![fig](https://i-blog.csdnimg.cn/direct/bae13d4218a54ac8a5768b183467554d.png) -->
+<img src="https://i-blog.csdnimg.cn/direct/bae13d4218a54ac8a5768b183467554d.png" alt="fig" width="30%"/>
+</center>
 
-> [!CAUTION]
-> 本项目仍在开发验证中，计算结果可能不准确
+# 🏴‍☠️ 马尼拉期望计算器
+
+> [!NOTE]
+> 本项目计算结果可能不够准确，欢迎游戏爱好者提供协助！也求个 star 😆✨
 
 本项目是一个基于 Vue 3 + Vite 的《马尼拉》桌游期望收益计算器，帮助玩家根据当前局势和规则，科学决策。
 
-![fig](https://i-blog.csdnimg.cn/direct/bae13d4218a54ac8a5768b183467554d.png)
+![demo](https://pica.zhimg.com/80/v2-2a959b16ac31e11dcc061b1e99f66249_1440w.webp?source=1def8aca)
 
 ## 快速开始
 
