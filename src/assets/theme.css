@@ -1,0 +1,26 @@
+/* 主题切换时的过渡效果 */
+body {
+  transition:
+    background-color 1s ease,
+    color 1s ease;
+}
+
+/* 表单元素在不同主题下的样式 */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] button,
+[data-theme="dark"] textarea {
+  background-color: #333;
+  color: #e0e0e0;
+  border-color: #555;
+}
+
+/* 在深色模式下确保表格边框和内容可见 */
+[data-theme="dark"] table {
+  color: var(--text-primary);
+}
+
+/* 确保链接在深色模式下可见 */
+[data-theme="dark"] a {
+  color: #69f0ae;
+}

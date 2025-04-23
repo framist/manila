@@ -5,10 +5,11 @@
         <h3>使用说明</h3>
         <div class="instruction-content">
           <p>此计算器帮助玩家计算《马尼拉》桌游中各放置帮手位置的期望收益，辅助决策。
-          <br />注意：计算的期望是「如选择这个位置」下的期望</p>
+            <br />注意：计算的期望是「如选择这个位置」下的期望
+          </p>
           <p><strong>假设与村规：</strong></p>
           <ol>
-            <li><strong>假设</strong>：海盗登上第一艘能上的船</li>
+            <li><strong>假设</strong>：海盗劫掠第一艘能上的船</li>
             <li><strong>假设</strong>：基于后期不会有改变价值的位置占据状况被改变</li>
             <li><strong>村规</strong>：海盗对无法影响第二轮移动结束时位于 13 号格子的平底船</li>
           </ol>
@@ -48,7 +49,7 @@
                     <input type="checkbox" v-model="boat.isSelected" />
                     <span class="boat-name" :class="boat.type">{{ boat.name }}</span>
                   </label>
-                </div>                
+                </div>
                 <div class="occupancy-slots">
                   位置：
                   <label v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`pos-${posIndex}`"
@@ -65,7 +66,7 @@
                 <span class="track-info">P(=13)={{ (calculateStopAt13Probability(boat) * 100).toFixed(1) }}%</span>
                 <span class="track-info">P(>12)={{ (calculateOver12Probability(boat) * 100).toFixed(1) }}%</span>
               </div>
-              
+
               <div class="track-slots">
                 <div class="track-slot" v-for="i in 14" :key="i - 1" :class="{ 'boat-here': i - 1 === boat.position }">
                   {{ i - 1 }}
@@ -79,7 +80,7 @@
         </div>
 
         <div class="section special-settings">
-          
+
           <div class="port-yard-occupancy">
             <h4>港口与造船厂已占用位置</h4>
             <div class="occupancy-group">
@@ -89,7 +90,7 @@
                   {{ pos.name }} ({{ pos.cost }}比索)
                 </label>
               </div>
-            </div>                      
+            </div>
           </div>
           <div class="special-occupancy">
             <h4>特殊位置已占用位置</h4>
@@ -103,14 +104,15 @@
             </div>
 
 
-          <div class="boats-setup">
+            <div class="boats-setup">
               <div class="position-control">
-                <label for="pirate-probability">设置无海盗时可能存在海盗的概率概率：</label>
-                <span>{{ (pirateProbability * 100).toFixed(0) }}%</span>
+                <label for="pirate-probability">设置可能存在海盗的概率概率：</label>
+                <span>{{ (pirateProbabilityForced * 100).toFixed(0) }}%</span>
                 <span v-if="hasPiratesActive()">（实际海盗已存在）</span>
-                <input type="range" v-model.number="pirateProbability" :min="0" :max="1" step="0.01" />
+                <input type="range" v-model.number="pirateProbability" :min="0" :max="1" step="0.01"
+                  :disabled="hasPiratesActive()" />
               </div>
-          </div>
+            </div>
 
           </div>
         </div>
@@ -241,11 +243,6 @@ const pirateProbabilityForced = computed(() => {
 const remainingDiceThrows = computed(() => {
   return 4 - currentRound.value;  // 1,2,3 轮对应 3,2,1 次投掷机会
 });
-
-// 获取当前轮次标签
-const getCurrentRoundLabel = () => {
-  return diceRounds.find(round => round.value === currentRound.value)?.label || '第一次投掷前';
-};
 
 // 定义船只数据
 const boats = ref([
@@ -459,7 +456,8 @@ function probExactlyM(probs: number[], m: number): number {
       dp[k] = dp[k] * (1 - p) + (k ? dp[k - 1] * p : 0);
     }
   }
-  return dp[m];}
+  return dp[m];
+}
 
 
 // 计算 n 个船能安全到达终点的期望
@@ -475,8 +473,8 @@ const calculatePortArrivalProbability = (port: PortYardPosition): number => {
   // 港口的概率是到达终点的概率，造船厂的概率是无法到达终点的概率
   // 船只优先停入靠前的港口/造船厂
   let p = [
-    calculateSafeArrivalProbability(1), 
-    calculateSafeArrivalProbability(2), 
+    calculateSafeArrivalProbability(1),
+    calculateSafeArrivalProbability(2),
     calculateSafeArrivalProbability(3)
   ];
   if (port.position === 'A') {
@@ -523,9 +521,9 @@ const calculateSpecialProfit = (pos: SpecialPosition): number => {
 
     visibleBoats.value.forEach(boat => {
       // prob *= 1 - calculateStopAt13Probability(boat);
-      totalBooty += calculateStopAt13Probability(boat) * boat.profit; 
+      totalBooty += calculateStopAt13Probability(boat) * boat.profit;
     });
-    
+
     // 海盗船长和船员平分
     const pirates = specialPositions.value.filter(p => p.type === 'pirate' && p.occupied);
     const pirateCount = pirates.length;
@@ -565,13 +563,13 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --highlight-low: rgba(46, 204, 113, 0.1);
   --highlight-high: rgba(46, 204, 113, 0.2);
-  
+
   /* 船只颜色 */
   --ginseng-color: #b69100;
   --silk-color: #3498DB;
   --nutmeg-color: #8f4c00;
   --jade-color: #2ECC71;
-  
+
   /* 交互元素 */
   --input-bg: #f5f5f5;
   --input-hover: #e9e9e9;
@@ -579,37 +577,49 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
   --boat-highlight: #ffeb3b;
 }
 
-/* 深色模式适配 */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-primary: #1e1e1e;
-    --bg-secondary: #2d2d2d;
-    --text-primary: #e0e0e0;
-    --text-secondary: #aaa;
-    --border-color: #444;
-    --border-light: #555;
-    --shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-    --highlight-low: rgba(46, 204, 113, 0.15);
-    --highlight-high: rgba(46, 204, 113, 0.25);
-    
-    /* 深色模式下调整船只颜色以提高可见性 */
-    --ginseng-color: #ffd54f;
-    --silk-color: #64b5f6;
-    --nutmeg-color: #ffab91;
-    --jade-color: #81c784;
-    
-    /* 交互元素 */
-    --input-bg: #333;
-    --input-hover: #444;
-    --disabled-color: #666;
-    --boat-highlight: #f57f17; /* 深色模式下船只位置高亮色 */
-  }
+/* 深色模式适配 - 使用 data-theme 属性而不是媒体查询 */
+[data-theme="dark"] {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #e0e0e0;
+  --text-secondary: #aaa;
+  --border-color: #444;
+  --border-light: #555;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --highlight-low: rgba(46, 204, 113, 0.15);
+  --highlight-high: rgba(46, 204, 113, 0.25);
+
+  /* 深色模式下调整船只颜色以提高可见性 */
+  --ginseng-color: #ffd54f;
+  --silk-color: #64b5f6;
+  --nutmeg-color: #ffab91;
+  --jade-color: #81c784;
+
+  /* 交互元素 */
+  --input-bg: #333;
+  --input-hover: #444;
+  --disabled-color: #666;
+  --boat-highlight: #ffea0070;
+  /* 深色模式下船只位置高亮色 */
 }
 
+/* 确保深色模式下文本可见 */
+[data-theme="dark"] .boat-here {
+  color: #111;
+  /* 深色模式下确保船位置的文字颜色可见 */
+}
+
+/* 深色模式下调整表单元素 */
+[data-theme="dark"] input[type="checkbox"],
+[data-theme="dark"] input[type="radio"] {
+  filter: invert(80%) hue-rotate(180deg);
+}
+
+/* 其余样式保持不变 */
 .manila-calculator {
   width: 100%;
-  max-width: 1800px;
+  max-width: 1280px;
   margin: 0 auto;
   box-sizing: border-box;
   color: var(--text-primary);
@@ -633,7 +643,9 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
 }
 
 /* 通用卡片样式 */
-.section, .instructions, .profit-section {
+.section,
+.instructions,
+.profit-section {
   margin-bottom: 20px;
   background: var(--bg-primary);
   border-radius: 8px;
@@ -657,7 +669,10 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
 }
 
 /* 通用内部容器样式 */
-.dice-round, .boat-item, .occupancy-group, .profit-table {
+.dice-round,
+.boat-item,
+.occupancy-group,
+.profit-table {
   background: var(--bg-secondary);
   border-radius: 6px;
   padding: 10px;
@@ -666,7 +681,9 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
 }
 
 /* 标题样式 */
-h2, h3, h4 {
+h2,
+h3,
+h4 {
   color: var(--text-primary);
   margin-top: 0;
 }
@@ -756,24 +773,29 @@ h4 {
 }
 
 /* 船只颜色 */
-.boat-name.ginseng, .track-label.ginseng {
+.boat-name.ginseng,
+.track-label.ginseng {
   color: var(--ginseng-color);
 }
 
-.boat-name.silk, .track-label.silk {
+.boat-name.silk,
+.track-label.silk {
   color: var(--silk-color);
 }
 
-.boat-name.nutmeg, .track-label.nutmeg {
+.boat-name.nutmeg,
+.track-label.nutmeg {
   color: var(--nutmeg-color);
 }
 
-.boat-name.jade, .track-label.jade {
+.boat-name.jade,
+.track-label.jade {
   color: var(--jade-color);
 }
 
 /* 表单元素 */
-.checkbox-label, .slot-label {
+.checkbox-label,
+.slot-label {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -796,7 +818,8 @@ h4 {
   gap: 8px;
 }
 
-.port-yard-grid, .special-grid {
+.port-yard-grid,
+.special-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 }
@@ -829,7 +852,8 @@ h4 {
 .boat-here {
   background-color: var(--boat-highlight);
   font-weight: bold;
-  color: #333; /* 确保深色背景下文字可见 */
+  color: #333;
+  /* 确保深色背景下文字可见 */
 }
 
 /* 收益表格 */
@@ -871,18 +895,19 @@ h4 {
 }
 
 /* 响应式调整 */
-@media (max-width: 900px) {
+@media (max-width: 1280px) {
   .calculator-layout {
     flex-direction: column;
   }
 
-  .input-panel, .output-panel {
+  .input-panel,
+  .output-panel {
     flex: none;
     width: 100%;
   }
 }
 
-@media (min-width: 1800px) {
+@media (min-width: 1024px) {
   .manila-calculator {
     padding: 0 20px;
   }
