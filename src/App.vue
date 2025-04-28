@@ -41,7 +41,7 @@ const toggleTheme = () => {
   <div class="app-container">
     <header>
       <div class="header-content">
-        <h1>🏴‍☠️ 只有如此才能打败 Spark 吗？ —— 马尼拉期望计算器</h1>
+        <h1>🏴‍☠️ 桌游《马尼拉》期望计算器</h1>
         <button
           class="theme-toggle"
           @click="toggleTheme"

@@ -473,37 +473,35 @@ const calculatePortArrivalProbability = (port: PortYardPosition): number => {
   // 港口的概率是到达终点的概率，造船厂的概率是无法到达终点的概率
   // 船只优先停入靠前的港口/造船厂
   let p = [
+    calculateSafeArrivalProbability(0),
     calculateSafeArrivalProbability(1),
     calculateSafeArrivalProbability(2),
     calculateSafeArrivalProbability(3)
   ];
-  if (port.position === 'A') {
-    // A 港口/造船厂
-    if (port.type === 'port') {
-      return p[0] + p[1] + p[2];
-    } else {
-      return 1 - (p[0] + p[1] + p[2]);
-    }
-  }
-  if (port.position === 'B') {
-    // B 港口/造船厂
-    if (port.type === 'port') {
-      return p[1] + p[2];
-    } else {
-      return 1 - (p[1] + p[2]);
-    }
-  }
-  if (port.position === 'C') {
-    // C 港口/造船厂
-    if (port.type === 'port') {
-      return p[2];
-    } else {
-      return 1 - p[2];
-    }
-  } else {
-    return 0;
-  }
 
+  if (port.type === 'port') {
+    if (port.position === 'A') {
+        return p[1] + p[2] + p[3];
+    }
+    if (port.position === 'B') {
+        return p[2] + p[3];
+    }
+    if (port.position === 'C') {
+        return p[3];
+    }
+  }
+  if (port.type === 'yard') {
+    if (port.position === 'A') {
+        return p[0] + p[1] + p[2];
+    }
+    if (port.position === 'B') {
+        return p[0] + p[1];
+    }
+    if (port.position === 'C') {
+        return p[0];
+    }
+  }
+  return 0;
 };
 
 // 计算港口/造船厂期望收益（固定收益）

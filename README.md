@@ -10,7 +10,7 @@
 
 本项目是一个基于 Vue 3 + Vite 的《马尼拉》桌游期望收益计算器，帮助玩家根据当前局势和规则，科学决策。
 
-![demo](https://pica.zhimg.com/80/v2-2a959b16ac31e11dcc061b1e99f66249_1440w.webp?source=1def8aca)
+![此图数值仅为示意](https://pica.zhimg.com/80/v2-2a959b16ac31e11dcc061b1e99f66249_1440w.webp?source=1def8aca)
 
 ## 快速开始
 
