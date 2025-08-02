@@ -38,106 +38,45 @@ const toggleTheme = () => {
 </script>
 
 <template>
-  <div class="app-container">
+  <main class="container">
     <header>
-      <div class="header-content">
-        <h1>🏴‍☠️ 桌游《马尼拉》期望计算器</h1>
-        <button
-          class="theme-toggle"
-          @click="toggleTheme"
-          :title="darkMode ? '切换到浅色模式' : '切换到深色模式'"
-        >
-          {{ darkMode ? "☀️" : "🌙" }}
-        </button>
-      </div>
+      <h1>🏴‍☠️ 桌游《马尼拉》期望计算器</h1>
+      <button
+        class="contrast"
+        @click="toggleTheme"
+        :title="darkMode ? '切换到浅色模式' : '切换到深色模式'"
+        style="width: auto; padding: 0.5rem;"
+      >
+        {{ darkMode ? "☀️" : "🌙" }}
+      </button>
     </header>
 
-    <main>
-      <ManilaCalculator />
-    </main>
-  </div>
+    <ManilaCalculator />
+  </main>
 </template>
 
 <style>
-/* 为深色/浅色模式定义颜色变量 */
-:root {
-  --app-bg: #ffffff;
-  --app-text: #2c3e50;
-  --app-border: #e0e0e0;
-}
-
-[data-theme="dark"] {
-  --app-bg: #121212;
-  --app-text: #e0e0e0;
-  --app-border: #444444;
-}
-
-.app-container {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0 10px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: var(--app-text);
-  background-color: var(--app-bg);
-}
-
+/* 只保留少量自定义样式 */
 header {
-  width: 100%;
-  max-width: 1280px;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid var(--app-border);
-}
-
-.header-content {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 2rem;
 }
 
 h1 {
-  font-size: 1.5rem;
-  color: var(--app-text);
   margin: 0;
 }
 
-/* 主题切换按钮样式 */
-.theme-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.5rem;
-  padding: 0.3rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-}
-
-.theme-toggle:hover {
-  background-color: rgba(128, 128, 128, 0.2);
-}
-
-main {
-  width: 100%;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-}
-
-@media (max-width: 1280px) {
-  h1 {
-    font-size: 1.3rem;
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
   }
-
-  .app-container {
-    padding: 0 5px;
+  
+  h1 {
+    font-size: 1.25rem;
   }
 }
 </style>

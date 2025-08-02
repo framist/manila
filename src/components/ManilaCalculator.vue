@@ -1,51 +1,48 @@
 <template>
   <div class="manila-calculator">
-    <div class="instructions-wrapper">
-      <div class="instructions">
-        <h3>使用说明</h3>
-        <div class="instruction-content">
-          <p>此计算器帮助玩家计算《马尼拉》桌游中各放置帮手位置的期望收益，辅助决策。
-            <br />注意：计算的期望是「如选择这个位置」下的期望
-          </p>
-          <p><strong>假设与村规：</strong></p>
-          <ol>
-            <li><strong>假设</strong>：海盗劫掠第一艘能上的船</li>
-            <li><strong>假设</strong>：基于后期不会有改变价值的位置占据状况被改变</li>
-            <li><strong>村规</strong>：海盗对无法影响第二轮移动结束时位于 13 号格子的平底船</li>
-          </ol>
-        </div>
-        <a href="https://github.com/framist/manila" target="_blank" class="github-link" title="查看GitHub仓库">
-          <span class="github-icon">
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <path fill-rule="evenodd"
-                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
-              </path>
-            </svg>
-          </span>
-        </a>
+    <section class="instructions">
+      <h3>使用说明</h3>
+      <div class="instruction-content">
+        <p>此计算器帮助玩家计算《马尼拉》桌游中各放置帮手位置的期望收益，辅助决策。
+          <br />注意：计算的期望是「如选择这个位置」下的期望
+        </p>
+        <p><strong>假设与村规：</strong></p>
+        <ol>
+          <li><strong>假设</strong>：海盗劫掠第一艘能上的船</li>
+          <li><strong>假设</strong>：基于后期不会有改变价值的位置占据状况被改变</li>
+          <li><strong>村规</strong>：海盗对无法影响第二轮移动结束时位于 13 号格子的平底船</li>
+        </ol>
       </div>
-    </div>
-
-    <div class="calculator-layout">
+      <a href="https://github.com/framist/manila" target="_blank" class="github-link" title="查看GitHub仓库">
+        <span class="github-icon">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path fill-rule="evenodd"
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+            </path>
+          </svg>
+        </span>
+      </a>
+    </section>    <div class="calculator-layout">
       <!-- 输入区域 - 左侧 -->
-      <div class="input-panel">
-        <div class="section boat-settings">
+      <section>
+        <article>
           <h3>游戏状态设置</h3>
-          <div class="dice-round">
-            <h4>当前轮次</h4>
+          <fieldset>
+            <legend>当前轮次</legend>
             <div class="round-selector">
               <label v-for="(round, index) in diceRounds" :key="index" class="round-option">
                 <input type="radio" :value="round.value" v-model="currentRound" />
                 {{ round.label }}
               </label>
             </div>
-          </div>
+          </fieldset>
 
-          <div class="boats-setup">
-            <div v-for="(boat, index) in boats" :key="index" class="boat-item">
+          <fieldset class="boats-setup">
+            <legend>船只设置</legend>
+            <div v-for="(boat, index) in boats" :key="index">
               <div class="boat-header">
                 <div class="boat-toggles">
-                  <label class="checkbox-label">
+                  <label>
                     <input type="checkbox" v-model="boat.isSelected" />
                     <span class="boat-name" :class="boat.type">{{ boat.name }}</span>
                   </label>
@@ -72,150 +69,144 @@
                   {{ i - 1 }}
                 </div>
               </div>
-              <div class="position-control">
+              <label>
+                船只位置：
                 <input type="range" v-model.number="boat.position" :min="0" :max="13" />
-              </div>
+              </label>
             </div>
-          </div>
-        </div>
+          </fieldset>
+        </article>
 
-        <div class="section special-settings">
+        <article>
+          <h3>特殊设置</h3>
 
-          <div class="port-yard-occupancy">
-            <h4>港口与造船厂已占用位置</h4>
-            <div class="occupancy-group">
-              <div class="occupancy-slots port-yard-grid">
-                <label v-for="(pos, posIndex) in portYardPositions" :key="`port-${posIndex}`" class="slot-label">
-                  <input type="checkbox" v-model="pos.occupied" />
-                  {{ pos.name }} ({{ pos.cost }}比索)
-                </label>
-              </div>
+          <fieldset>
+            <legend>港口与造船厂已占用位置</legend>
+            <div class="port-yard-grid">
+              <label v-for="(pos, posIndex) in portYardPositions" :key="`port-${posIndex}`">
+                <input type="checkbox" v-model="pos.occupied" />
+                {{ pos.name }} ({{ pos.cost }}比索)
+              </label>
             </div>
-          </div>
-          <div class="special-occupancy">
-            <h4>特殊位置已占用位置</h4>
-            <div class="occupancy-group">
-              <div class="occupancy-slots special-grid">
-                <label v-for="(pos, posIndex) in specialPositions" :key="`special-${posIndex}`" class="slot-label">
-                  <input type="checkbox" v-model="pos.occupied" />
-                  {{ pos.name }} ({{ pos.cost }}比索)
-                </label>
-              </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>特殊位置已占用位置</legend>
+            <div class="special-grid">
+              <label v-for="(pos, posIndex) in specialPositions" :key="`special-${posIndex}`">
+                <input type="checkbox" v-model="pos.occupied" />
+                {{ pos.name }} ({{ pos.cost }}比索)
+              </label>
             </div>
+          </fieldset>
 
-
-            <div class="boats-setup">
-              <div class="position-control">
-                <label for="pirate-probability">设置可能存在海盗的概率概率：</label>
-                <span>{{ (pirateProbabilityForced * 100).toFixed(0) }}%</span>
-                <span v-if="hasPiratesActive()">（实际海盗已存在）</span>
-                <input type="range" v-model.number="pirateProbability" :min="0" :max="1" step="0.01"
-                  :disabled="hasPiratesActive()" />
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
+          <fieldset>
+            <legend>海盗概率设置</legend>
+            <label for="pirate-probability">设置可能存在海盗的概率：</label>
+            <span>{{ (pirateProbabilityForced * 100).toFixed(0) }}%</span>
+            <span v-if="hasPiratesActive()">（实际海盗已存在）</span>
+            <input type="range" v-model.number="pirateProbability" :min="0" :max="1" step="0.01"
+              :disabled="hasPiratesActive()" id="pirate-probability" />
+          </fieldset>
+        </article>
+      </section>
 
       <!-- 输出区域 - 右侧 -->
-      <div class="output-panel">
-        <div class="profit-section">
+      <section>
+        <article>
           <h3>收益期望分析</h3>
 
-          <div class="profit-tables">
-            <div class="profit-table" v-if="visibleBoats.length > 0">
-              <h4>平底船位置收益</h4>
-              <table>
-                <thead>
-                  <tr>
-                    <th>货物</th>
-                    <th>位置</th>
-                    <th>成本</th>
-                    <th>分成收益</th>
-                    <th>到达概率</th>
-                    <th>期望净收益</th>
-                    <th>状态</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template v-for="(boat, boatIndex) in visibleBoats" :key="boatIndex">
-                    <tr v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`${boatIndex}-${posIndex}`" :class="{
-                      'high-profit': !pos.occupied && calculateExpectedProfit(boat, pos) > 0,
-                      'higher-profit': !pos.occupied && calculateExpectedProfit(boat, pos) > 2,
-                      'isAvailable': pos.occupied
-                    }">
-                      <td>{{ boat.name }}</td>
-                      <td>{{ posIndex + 1 }}</td>
-                      <td>{{ pos.cost }}比索</td>
-                      <td>{{ calculateMaxProfit(boat, pos).toFixed(1) }}比索</td>
-                      <td>{{ (calculateArrivalProbability(boat) * 100).toFixed(0) }}%</td>
-                      <td>{{ calculateExpectedProfit(boat, pos).toFixed(1) }}比索</td>
-                      <td><input type="checkbox" v-model="pos.occupied" /></td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="profit-table">
-              <h4>港口和造船厂收益</h4>
-              <table>
-                <thead>
-                  <tr>
-                    <th>位置</th>
-                    <th>成本</th>
-                    <th>收益</th>
-                    <th>到达概率</th>
-                    <th>期望净收益</th>
-                    <th>状态</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(pos, portIndex) in portYardPositions" :key="portIndex" :class="{
-                    'high-profit': !pos.occupied && calculatePortExpectedProfit(pos) > 0,
-                    'higher-profit': !pos.occupied && calculatePortExpectedProfit(pos) > 2,
+          <div v-if="visibleBoats.length > 0">
+            <h4>平底船位置收益</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>货物</th>
+                  <th>位置</th>
+                  <th>成本</th>
+                  <th>分成收益</th>
+                  <th>到达概率</th>
+                  <th>期望净收益</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="(boat, boatIndex) in visibleBoats" :key="boatIndex">
+                  <tr v-for="(pos, posIndex) in getBoatPositions(boat.type)" :key="`${boatIndex}-${posIndex}`" :class="{
+                    'high-profit': !pos.occupied && calculateExpectedProfit(boat, pos) > 0,
+                    'higher-profit': !pos.occupied && calculateExpectedProfit(boat, pos) > 2,
                     'isAvailable': pos.occupied
                   }">
-                    <td>{{ pos.name }}</td>
+                    <td>{{ boat.name }}</td>
+                    <td>{{ posIndex + 1 }}</td>
                     <td>{{ pos.cost }}比索</td>
-                    <td>{{ pos.profit }}比索</td>
-                    <td>{{ (calculatePortArrivalProbability(pos) * 100).toFixed(0) }}%</td>
-                    <td>{{ calculatePortExpectedProfit(pos).toFixed(1) }}比索</td>
+                    <td>{{ calculateMaxProfit(boat, pos).toFixed(1) }}比索</td>
+                    <td>{{ (calculateArrivalProbability(boat) * 100).toFixed(0) }}%</td>
+                    <td>{{ calculateExpectedProfit(boat, pos).toFixed(1) }}比索</td>
                     <td><input type="checkbox" v-model="pos.occupied" /></td>
                   </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="profit-table">
-              <h4>特殊位置收益</h4>
-              <table>
-                <thead>
-                  <tr>
-                    <th>位置</th>
-                    <th>成本</th>
-                    <th>期望净收益</th>
-                    <th>状态</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(pos, index) in specialPositions" :key="index" :class="{
-                    'high-profit': !pos.occupied && calculateSpecialExpectedProfit(pos) > 0,
-                    'higher-profit': !pos.occupied && calculateSpecialExpectedProfit(pos) > 2,
-                    'isAvailable': pos.occupied
-                  }">
-                    <td>{{ pos.name }}</td>
-                    <td>{{ pos.cost }}比索</td>
-                    <td>{{ calculateSpecialExpectedProfit(pos).toFixed(1) }}比索</td>
-                    <td><input type="checkbox" v-model="pos.occupied" /></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                </template>
+              </tbody>
+            </table>
           </div>
-        </div>
-      </div>
+
+          <div>
+            <h4>港口和造船厂收益</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>位置</th>
+                  <th>成本</th>
+                  <th>收益</th>
+                  <th>到达概率</th>
+                  <th>期望净收益</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(pos, portIndex) in portYardPositions" :key="portIndex" :class="{
+                  'high-profit': !pos.occupied && calculatePortExpectedProfit(pos) > 0,
+                  'higher-profit': !pos.occupied && calculatePortExpectedProfit(pos) > 2,
+                  'isAvailable': pos.occupied
+                }">
+                  <td>{{ pos.name }}</td>
+                  <td>{{ pos.cost }}比索</td>
+                  <td>{{ pos.profit }}比索</td>
+                  <td>{{ (calculatePortArrivalProbability(pos) * 100).toFixed(0) }}%</td>
+                  <td>{{ calculatePortExpectedProfit(pos).toFixed(1) }}比索</td>
+                  <td><input type="checkbox" v-model="pos.occupied" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <h4>特殊位置收益</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>位置</th>
+                  <th>成本</th>
+                  <th>期望净收益</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(pos, index) in specialPositions" :key="index" :class="{
+                  'high-profit': !pos.occupied && calculateSpecialExpectedProfit(pos) > 0,
+                  'higher-profit': !pos.occupied && calculateSpecialExpectedProfit(pos) > 2,
+                  'isAvailable': pos.occupied
+                }">
+                  <td>{{ pos.name }}</td>
+                  <td>{{ pos.cost }}比索</td>
+                  <td>{{ calculateSpecialExpectedProfit(pos).toFixed(1) }}比索</td>
+                  <td><input type="checkbox" v-model="pos.occupied" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
     </div>
   </div>
 </template>
@@ -549,227 +540,60 @@ const calculateSpecialExpectedProfit = (pos: SpecialPosition): number => {
 </script>
 
 <style>
-:root {
-  --bg-primary: #f9f9f9;
-  --bg-secondary: #ffffff;
-  --text-primary: #2c3e50;
-  --text-secondary: #777;
-  --border-color: #e0e0e0;
-  --border-light: #eee;
-  --shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --highlight-low: rgba(46, 204, 113, 0.1);
-  --highlight-high: rgba(46, 204, 113, 0.2);
+/* 全局字体大小调整 - 提高信息密度 */
+.manila-calculator {
+  font-size: 0.875rem; /* 14px base font */
+}
 
-  /* 船只颜色 */
+.manila-calculator h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.manila-calculator h4 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.manila-calculator legend {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.manila-calculator table {
+  font-size: 0.8rem; /* 更小的表格字体 */
+}
+
+.manila-calculator fieldset {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+}
+
+.manila-calculator article {
+  margin-bottom: 1.5rem;
+}
+
+/* 船只颜色变量 */
+:root {
   --ginseng-color: #b69100;
   --silk-color: #3498DB;
   --nutmeg-color: #8f4c00;
   --jade-color: #2ECC71;
-
-  /* 交互元素 */
-  --input-bg: #f5f5f5;
-  --input-hover: #e9e9e9;
-  --disabled-color: #ccc;
+  
+  /* 游戏特定的高亮色 */
   --boat-highlight: #ffeb3b;
 }
 
-/* 深色模式适配 - 使用 data-theme 属性而不是媒体查询 */
+/* 深色模式下的船只颜色调整 */
 [data-theme="dark"] {
-  --bg-primary: #1e1e1e;
-  --bg-secondary: #2d2d2d;
-  --text-primary: #e0e0e0;
-  --text-secondary: #aaa;
-  --border-color: #444;
-  --border-light: #555;
-  --shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --highlight-low: rgba(46, 204, 113, 0.15);
-  --highlight-high: rgba(46, 204, 113, 0.25);
-
-  /* 深色模式下调整船只颜色以提高可见性 */
   --ginseng-color: #ffd54f;
   --silk-color: #64b5f6;
   --nutmeg-color: #ffab91;
   --jade-color: #81c784;
-
-  /* 交互元素 */
-  --input-bg: #333;
-  --input-hover: #444;
-  --disabled-color: #666;
   --boat-highlight: #ffea0070;
-  /* 深色模式下船只位置高亮色 */
 }
 
-/* 确保深色模式下文本可见 */
-[data-theme="dark"] .boat-here {
-  color: #111;
-  /* 深色模式下确保船位置的文字颜色可见 */
-}
-
-/* 深色模式下调整表单元素 */
-[data-theme="dark"] input[type="checkbox"],
-[data-theme="dark"] input[type="radio"] {
-  filter: invert(80%) hue-rotate(180deg);
-}
-
-/* 其余样式保持不变 */
-.manila-calculator {
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  box-sizing: border-box;
-  color: var(--text-primary);
-}
-
-/* 布局结构 */
-.calculator-layout {
-  display: flex;
-  width: 100%;
-  gap: 20px;
-}
-
-.input-panel {
-  flex: 0 0 280px;
-  min-width: 500px;
-}
-
-.output-panel {
-  flex: 1;
-  min-width: 500px;
-}
-
-/* 通用卡片样式 */
-.section,
-.instructions,
-.profit-section {
-  margin-bottom: 20px;
-  background: var(--bg-primary);
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: var(--shadow);
-}
-
-.instructions {
-  position: relative;
-  border: 1px solid var(--border-color);
-}
-
-.instructions-wrapper {
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.instruction-content {
-  line-height: 1.6;
-  font-size: 0.9em;
-}
-
-/* 通用内部容器样式 */
-.dice-round,
-.boat-item,
-.occupancy-group,
-.profit-table {
-  background: var(--bg-secondary);
-  border-radius: 6px;
-  padding: 10px;
-  border: 1px solid var(--border-light);
-  margin-bottom: 12px;
-}
-
-/* 标题样式 */
-h2,
-h3,
-h4 {
-  color: var(--text-primary);
-  margin-top: 0;
-}
-
-h3 {
-  margin-bottom: 12px;
-  font-size: 1.2rem;
-}
-
-h4 {
-  margin-bottom: 10px;
-  font-size: 1rem;
-}
-
-/* GitHub 链接样式 */
-.github-link {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 40px;
-  height: 40px;
-  background-color: var(--bg-secondary);
-  border-bottom-left-radius: 4px;
-  text-decoration: none;
-}
-
-.github-icon {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  fill: var(--text-primary);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.github-icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-/* 轮次选择器 */
-.round-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.round-option {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background-color: var(--input-bg);
-  cursor: pointer;
-}
-
-.round-option:hover {
-  background-color: var(--input-hover);
-}
-
-/* 船只样式 */
-.boats-setup {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.boat-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.boat-name {
-  font-weight: bold;
-  font-size: 1.1em;
-}
-
-.boat-toggles {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* 船只颜色 */
+/* 船只颜色样式 */
 .boat-name.ginseng,
 .track-label.ginseng {
   color: var(--ginseng-color);
@@ -790,123 +614,215 @@ h4 {
   color: var(--jade-color);
 }
 
-/* 表单元素 */
-.checkbox-label,
-.slot-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.85em;
+/* 船只当前位置高亮 */
+.boat-here {
+  background-color: var(--boat-highlight);
+  font-weight: bold;
 }
 
-.position-control {
-  margin-bottom: 5px;
+[data-theme="dark"] .boat-here {
+  color: #111;
 }
 
-.position-control input[type="range"] {
-  width: 100%;
-  margin: 5px 0;
+/* 收益表格高亮 - 修复高亮功能 */
+.high-profit {
+  background-color: rgba(46, 204, 113, 0.15) !important;
 }
 
-/* 位置网格布局 */
-.occupancy-slots {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.higher-profit {
+  background-color: rgba(46, 204, 113, 0.3) !important;
 }
 
-.port-yard-grid,
-.special-grid {
+[data-theme="dark"] .high-profit {
+  background-color: rgba(46, 204, 113, 0.2) !important;
+}
+
+[data-theme="dark"] .higher-profit {
+  background-color: rgba(46, 204, 113, 0.35) !important;
+}
+
+.isAvailable {
+  opacity: 0.6;
+}
+
+/* 紧凑布局 - 使用 Pico.css 的网格系统 */
+.calculator-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem; /* 减小间距 */
 }
 
-/* 轨道样式 */
-.track-header {
-  display: flex;
-  margin-bottom: 4px;
+@media (max-width: 768px) {
+  .calculator-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
 
-.track-info {
-  width: 100px;
-  font-size: small;
-  color: var(--text-primary);
-}
-
+/* 紧凑的轨道显示 */
 .track-slots {
   display: flex;
-  width: 100%;
+  margin: 0.75rem 0; /* 减小边距 */
 }
 
 .track-slot {
   flex: 1;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--pico-border-color, #ddd);
   text-align: center;
-  padding: 5px 2px;
-  font-size: 11px;
+  padding: 0.2rem; /* 更紧凑的内边距 */
+  font-size: 0.7rem; /* 更小的字体 */
+  min-height: 1.5rem;
 }
 
-.boat-here {
-  background-color: var(--boat-highlight);
-  font-weight: bold;
-  color: #333;
-  /* 确保深色背景下文字可见 */
+.track-info {
+  font-size: 0.7rem; /* 更小的字体 */
+  margin-right: 0.75rem;
 }
 
-/* 收益表格 */
-.profit-tables {
+/* 紧凑的轨道 header */
+.track-header {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  gap: 0.75rem; /* 减小间距 */
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem; /* 更小的字体 */
 }
 
-.profit-table table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9em;
+/* 船只 header 紧凑布局 */
+.boat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.profit-table th,
-.profit-table td {
-  border: 1px solid var(--border-light);
-  padding: 6px 8px;
-  text-align: center;
+.occupancy-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem; /* 减小间距 */
+  font-size: 0.8rem; /* 更小的字体 */
 }
 
-.profit-table th {
-  background-color: var(--bg-primary);
+/* GitHub 图标样式 */
+.github-link {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.4rem; /* 减小内边距 */
+  text-decoration: none;
+}
+
+.github-icon svg {
+  width: 1.25rem; /* 稍小的图标 */
+  height: 1.25rem;
+  fill: currentColor;
+}
+
+/* 说明区域样式 */
+.instructions {
+  position: relative;
+  margin-bottom: 1rem; /* 减小底部边距 */
+}
+
+.instruction-content {
+  line-height: 1.5; /* 紧凑行高 */
+  font-size: 0.85rem; /* 更小的字体 */
+}
+
+.instruction-content p {
+  margin-bottom: 0.5rem; /* 减小段落间距 */
+}
+
+.instruction-content ol {
+  margin-bottom: 0.5rem;
+  padding-left: 1.2rem; /* 减小缩进 */
+}
+
+.instruction-content li {
+  margin-bottom: 0.25rem; /* 减小列表项间距 */
+}
+
+/* 船只名称加粗 */
+.boat-name {
   font-weight: bold;
+  font-size: 0.9rem; /* 更小的船只名称 */
 }
 
-/* 高亮样式 */
-.high-profit {
-  background-color: var(--highlight-low);
+/* 紧凑的轮次选择器 */
+.round-selector {
+  display: flex;
+  gap: 0.75rem; /* 减小间距 */
+  flex-wrap: wrap;
 }
 
-.higher-profit {
-  background-color: var(--highlight-high);
+.round-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem; /* 减小间距 */
+  font-size: 0.85rem; /* 更小的字体 */
 }
 
-.isAvailable {
-  color: var(--disabled-color);
+/* 紧凑的位置网格 */
+.port-yard-grid,
+.special-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* 稍小的最小宽度 */
+  gap: 0.4rem; /* 减小间距 */
 }
 
-/* 响应式调整 */
-@media (max-width: 1280px) {
-  .calculator-layout {
-    flex-direction: column;
-  }
-
-  .input-panel,
-  .output-panel {
-    flex: none;
-    width: 100%;
-  }
+.slot-label {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem; /* 减小间距 */
+  font-size: 0.8rem; /* 更小的字体 */
 }
 
-@media (min-width: 1024px) {
-  .manila-calculator {
-    padding: 0 20px;
-  }
+/* 紧凑的表格样式 */
+.manila-calculator table th,
+.manila-calculator table td {
+  padding: 0.4rem 0.5rem; /* 减小单元格内边距 */
+  vertical-align: middle;
+}
+
+.manila-calculator table th {
+  font-size: 0.75rem; /* 更小的表头字体 */
+  font-weight: 600;
+}
+
+/* 添加分组边框以提高可读性 */
+.manila-calculator fieldset {
+  border: 1px solid var(--pico-border-color, #ddd);
+  border-radius: 0.375rem;
+  background-color: var(--pico-card-background-color, rgba(255,255,255,0.5));
+}
+
+.manila-calculator article {
+  border: 1px solid var(--pico-border-color, #ddd);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: var(--pico-card-background-color, rgba(255,255,255,0.3));
+}
+
+/* 深色模式下的边框调整 */
+[data-theme="dark"] .manila-calculator fieldset,
+[data-theme="dark"] .manila-calculator article {
+  border-color: var(--pico-border-color, #444);
+  background-color: var(--pico-card-background-color, rgba(255,255,255,0.05));
+}
+
+/* 表格分组样式 */
+.manila-calculator > section > article > div {
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--pico-border-color, #eee);
+  border-radius: 0.375rem;
+  background-color: var(--pico-card-background-color, rgba(255,255,255,0.7));
+}
+
+[data-theme="dark"] .manila-calculator > section > article > div {
+  border-color: var(--pico-border-color, #333);
+  background-color: var(--pico-card-background-color, rgba(255,255,255,0.03));
 }
 </style>
