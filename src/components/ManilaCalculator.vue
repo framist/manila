@@ -429,8 +429,7 @@ const calculateArrivalProbability = (boat: Boat): number => {
 const calculateExpectedProfit = (boat: Boat, pos: Position): number => {
   if (!boat.isSelected) return -pos.cost;
   let profit = calculateMaxProfit(boat, pos);
-  profit = profit * calculateArrivalProbability(boat);
-  const probability = calculateOver13Probability(boat);
+  const probability = calculateArrivalProbability(boat);
   return profit * probability - pos.cost;
 };
 
