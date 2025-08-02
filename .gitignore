@@ -20,3 +20,5 @@ dist/
 
 # Others
 *.local
+
+.github/copilot-instructions.md
