@@ -415,14 +415,25 @@ const calculateMaxProfit = (boat: Boat, pos: Position): number => {
   return boat.profit / finalShareBase;
 };
 
+// 根据是否存在海盗计算单艘船的到达概率
+const calculateArrivalProbabilityByPirateState = (boat: Boat, piratesPresent: boolean): number => {
+  return piratesPresent ? calculateOver13Probability(boat) : calculateOver12Probability(boat);
+};
+
 // 考虑可能存在海盗下的到达概率
 const calculateArrivalProbability = (boat: Boat): number => {
-  if (hasPiratesActive()) {
-    return calculateOver13Probability(boat);
-  } else {
-    return calculateOver12Probability(boat) * (1 - pirateProbabilityForced.value)
-      + pirateProbabilityForced.value * calculateOver13Probability(boat);
+  const piratesActive = hasPiratesActive();
+  const pirateChance = piratesActive ? 1 : pirateProbabilityForced.value;
+  const arrivalWithPirates = calculateArrivalProbabilityByPirateState(boat, true);
+
+  if (piratesActive) {
+    return arrivalWithPirates;
   }
+
+  const arrivalWithoutPirates = calculateArrivalProbabilityByPirateState(boat, false);
+  const noPirateChance = 1 - pirateChance;
+
+  return noPirateChance * arrivalWithoutPirates + pirateChance * arrivalWithPirates;
 };
 
 // 计算货物平底船的期望净收益
@@ -461,8 +472,21 @@ function probExactlyM(probs: number[], m: number): number {
 
 // 计算 n 个船能安全到达终点的期望
 const calculateSafeArrivalProbability = (n: number): number => {
-  const probs = visibleBoats.value.map(boat => calculateArrivalProbability(boat));
-  return probExactlyM(probs, n);
+  const piratesActive = hasPiratesActive();
+  const pirateChance = piratesActive ? 1 : pirateProbabilityForced.value;
+  const noPirateChance = piratesActive ? 0 : 1 - pirateChance;
+
+  const probsWithoutPirates = visibleBoats.value.map(boat =>
+    calculateArrivalProbabilityByPirateState(boat, false)
+  );
+  const probsWithPirates = visibleBoats.value.map(boat =>
+    calculateArrivalProbabilityByPirateState(boat, true)
+  );
+
+  const safeWithoutPirates = probExactlyM(probsWithoutPirates, n);
+  const safeWithPirates = probExactlyM(probsWithPirates, n);
+
+  return noPirateChance * safeWithoutPirates + pirateChance * safeWithPirates;
 };
 
 // 计算港口/造船厂到达概率
