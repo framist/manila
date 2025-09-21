@@ -47,18 +47,18 @@
   $\Pr(X_i > 12)$ 与 $\Pr(X_i > 13)$ 分别对应“无海盗”与“海盗存在”时的到港条件。
 - **显式海盗状态**：对每艘船 $i$ 定义：
 
-  $$
+  ```math
   P_i^{(\text{pirate})} = \Pr(X_i > 13), \quad
   P_i^{(\text{safe})} = \Pr(X_i > 12).
-  $$
+  ```
 
   若有玩家实际占据海盗位置，则全局海盗概率 $p_{\text{pirate}} = 1$；否则 $p_{\text{pirate}}$ 取自滑杆设置。
 - **联合分布**：使用动态规划函数 $f_m(\mathbf{P})$ 计算给定概率向量 $\mathbf{P}$ 时恰有 $m$ 艘船到港的概率。最终结果按全局
   海盗概率加权：
 
-  $$
+  ```math
   \Pr(M = m) = (1 - p_{\text{pirate}})\, f_m\big(\mathbf{P}^{(\text{safe})}\big) + p_{\text{pirate}}\, f_m\big(\mathbf{P}^{(\text{pirate})}\big),
-  $$
+  ```
 
   使港口/造船厂与保险赔付等期望计算保持一致。
 
